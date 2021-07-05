@@ -1,4 +1,4 @@
-// include ':MyFirstPlugin'
+include ':Texter'
 rootProject.name = "plugins"
 
 include ':DiscordStubs'
