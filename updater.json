@@ -1,0 +1,10 @@
+{
+    "default": {
+        "minimumDiscordVersion": 80202,
+        "version": "1.0.0",
+        "build": "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/%s.json"
+    },
+    "Texter": {
+        "version": "1.0.0"
+    }
+}
