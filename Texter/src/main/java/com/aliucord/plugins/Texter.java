@@ -37,16 +37,16 @@ public class Texter extends Plugin {
                 Collections.singletonList(
                         new ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to make small", null, true, true, null, null)
                 ),
-                // Return a command result with Hello World! as the content, no embeds and send set to false
-                args -> {
-                    String text = (String) args.get("text");
-                    String[] split = text.split("(?!^)");
-                    StringBuilder newText = new StringBuilder();
-                    for (String character : split) {
-                        newText.append(Maps.getMappedChar(Maps.smallLetters, character));
-                    }
-                    return new CommandsAPI.CommandResult(newText.toString(), null, true);
-                }
+                args -> new CommandsAPI.CommandResult(Maps.getMappedString(Maps.smallLetters, (String) args.get("text")), null, true)
+        );
+
+        commands.registerCommand(
+                "smaller",
+                "Turns your text into smaller letters",
+                Collections.singletonList(
+                        new ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to make small", null, true, true, null, null)
+                ),
+                args -> new CommandsAPI.CommandResult(Maps.getMappedString(Maps.smallerLetters, (String) args.get("text")), null, true)
         );
     }
 
