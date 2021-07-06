@@ -1,4 +1,4 @@
-package tech.tyman.texter;
+package tech.tyman.plugins;
 
 import android.util.Pair;
 

@@ -1,4 +1,4 @@
-package tech.tyman.texter;
+package tech.tyman.plugins;
 
 // Import several packages such as Aliucord's CommandApi and the Plugin class
 import android.content.Context;
@@ -10,8 +10,6 @@ import com.discord.api.commands.ApplicationCommandType;
 import com.discord.models.commands.ApplicationCommandOption;
 
 import java.util.Collections;
-
-import tech.tyman.texter.Maps;
 
 // This class is never used so your IDE will likely complain. Let's make it shut up!
 @SuppressWarnings("unused")
