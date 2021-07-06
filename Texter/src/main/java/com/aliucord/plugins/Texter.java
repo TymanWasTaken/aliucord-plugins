@@ -1,4 +1,4 @@
-package tech.tyman.plugins;
+package com.aliucord.plugins;
 
 // Import several packages such as Aliucord's CommandApi and the Plugin class
 import android.content.Context;

@@ -1,4 +1,4 @@
-package tech.tyman.plugins;
+package com.aliucord.plugins;
 
 import android.util.Pair;
 
