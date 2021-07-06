@@ -24,7 +24,7 @@ public class Texter extends Plugin {
         manifest.authors = new Manifest.Author[]{new Manifest.Author("Tyman", 487443883127472129L)};
         manifest.description = "A port of Texter for powercord to Aliucord";
         manifest.version = "1.0.0";
-        manifest.updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json";
+        manifest.updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json?token=AHZF3HFNLTMCX3OZXO6JNW3A5TL4Y";
         return manifest;
     }
 
