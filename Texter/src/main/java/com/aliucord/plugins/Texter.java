@@ -9,6 +9,7 @@ import com.aliucord.entities.Plugin;
 import com.discord.api.commands.ApplicationCommandType;
 import com.discord.models.commands.ApplicationCommandOption;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -49,6 +50,15 @@ public class Texter extends Plugin {
                         "fw"
                 ),
                 ctx -> getResult(Maps.fullWidthLetters, ctx.getString("text"))
+        );
+        registerConverterCommand(
+                "emoji",
+                "Turns your text into emoji letters",
+                Arrays.asList(
+                        "emojify",
+                        "blockify"
+                ),
+                ctx -> getResult(Maps.emojiLetters, ctx.getString("text"))
         );
     }
 
