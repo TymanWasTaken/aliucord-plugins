@@ -23,7 +23,7 @@ public class Texter extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{new Manifest.Author("Tyman", 487443883127472129L)};
         manifest.description = "A port of Texter for powercord to Aliucord";
-        manifest.version = "0.0.4";
+        manifest.version = "0.0.5";
         manifest.updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -51,15 +51,15 @@ public class Texter extends Plugin {
                 ),
                 ctx -> getResult(Maps.fullWidthLetters, ctx.getString("text"))
         );
-        registerConverterCommand(
-                "emoji",
-                "Turns your text into emoji letters",
-                Arrays.asList(
-                        "emojify",
-                        "blockify"
-                ),
-                ctx -> getResult(Maps.emojiLetters, ctx.getString("text"))
-        );
+//        registerConverterCommand(
+//                "emoji",
+//                "Turns your text into emoji letters",
+//                Arrays.asList(
+//                        "emojify",
+//                        "blockify"
+//                ),
+//                ctx -> getResult(Maps.emojiLetters, ctx.getString("text"))
+//        );
     }
 
     public void registerConverterCommand(String name, String description, List<String> aliases, Function1<CommandContext, CommandsAPI.CommandResult> execute) {
