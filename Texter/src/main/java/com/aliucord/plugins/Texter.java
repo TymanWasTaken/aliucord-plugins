@@ -37,7 +37,7 @@ public class Texter extends Plugin {
                 Collections.singletonList(
                         new ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to make small", null, true, true, null, null)
                 ),
-                args -> new CommandsAPI.CommandResult(Maps.getMappedString(Maps.smallLetters, (String) args.get("text")), null, true)
+                ctx -> getResult(Maps.smallLetters, ctx.getString("text"))
         );
 
         commands.registerCommand(
@@ -46,7 +46,7 @@ public class Texter extends Plugin {
                 Collections.singletonList(
                         new ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to make small", null, true, true, null, null)
                 ),
-                args -> new CommandsAPI.CommandResult(Maps.getMappedString(Maps.smallerLetters, (String) args.get("text")), null, true)
+                ctx -> getResult(Maps.smallerLetters, ctx.getString("text"))
         );
     }
 
@@ -55,5 +55,9 @@ public class Texter extends Plugin {
     public void stop(Context context) {
         // Unregisters all commands
         commands.unregisterAll();
+    }
+
+    public CommandsAPI.CommandResult getResult(String map, String textToMap) {
+        return new CommandsAPI.CommandResult(Maps.getMappedString(map, textToMap), null, true);
     }
 }
