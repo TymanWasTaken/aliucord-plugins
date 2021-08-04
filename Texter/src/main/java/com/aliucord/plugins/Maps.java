@@ -16,7 +16,6 @@ public class Maps {
         }
         return newString.toString();
     }
-
     public static Map<String, String> smallLetters = Utils.createMap(
             "q", "ǫ",
             "w", "ᴡ",

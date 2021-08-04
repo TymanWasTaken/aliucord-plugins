@@ -1,10 +1,18 @@
-# The plugins to build or *
-param([String]$plugins = "*") 
+# The plugins to build, or defaults to all plugins
+param([String]$Plugins = "*")
+
+if (-not(Get-Command "d8" -errorAction SilentlyContinue))
+{
+    Throw "Please add the Android SDK build tools to your path (Android/Sdk/build-tools/SOME_VERSION)"
+}
 
 Set-Location ../buildtool
 Write-Output "Building plugin..."
 ./buildtool.exe -p "$plugins"
 Set-Location ../buildsPlugins
+if (-not(adb devices | findstr "\<device\>")) {
+	Throw "No android device found. Connect to your phone via adb first"
+}
 Write-Output "Pushing plugin zip to device..."
 if ($plugins -eq "*") {
 	$files = Get-ChildItem . -Filter *.zip
