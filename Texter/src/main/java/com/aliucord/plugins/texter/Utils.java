@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.Random;
 
 public class Utils {
-    public static <T> Map<T, T> createMap(T... entries) {
-        Map<T, T> map = new HashMap<>();
-        T curKey = null;
+    public static Map<String, String> createMap(String... entries) {
+        Map<String, String> map = new HashMap<>();
+        String curKey = null;
         for (int i = 1; i <= entries.length; i++) {
             if (i % 2 == 1) {
                 curKey = entries[i - 1];
