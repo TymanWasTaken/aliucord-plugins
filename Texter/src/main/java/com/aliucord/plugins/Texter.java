@@ -86,7 +86,7 @@ public class Texter extends Plugin {
         );
         registerConverterCommand(
                 "space",
-                "Spaces out your textx",
+                "Spaces out your text",
                 Collections.emptyList(),
                 ctx -> getResult(TextUtils.join(" ",ctx.getString("text").split("(?!^)")))
         );
