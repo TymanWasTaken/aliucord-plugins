@@ -16,4 +16,7 @@ public class Utils {
         }
         return map;
     }
+    public static String clapify(String text) {
+        return ":clap:" + text.replace(" ", ":clap:") + ":clap:";
+    }
 }

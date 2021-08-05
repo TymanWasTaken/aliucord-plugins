@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import kotlin.jvm.functions.Function1;
 
@@ -24,7 +25,7 @@ public class Texter extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{new Manifest.Author("Tyman", 487443883127472129L)};
         manifest.description = "A port of Texter for powercord to Aliucord";
-        manifest.version = "0.0.6";
+        manifest.version = "0.0.7";
         manifest.updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -61,6 +62,18 @@ public class Texter extends Plugin {
                 ),
                 ctx -> getResult(Maps.emojiLetters, ctx.getString("text"))
         );
+        registerConverterCommand(
+                "flip",
+                "Flips your text upside down",
+                Collections.emptyList(),
+                ctx -> getResult(Maps.flippedLetters, new StringBuilder(Objects.requireNonNull(ctx.getString("text"))).reverse().toString())
+        );
+        registerConverterCommand(
+                "clap",
+                "Adds clapping icons to your text",
+                Collections.emptyList(),
+                ctx -> getResult(Utils.clapify(Objects.requireNonNull(ctx.getString("text"))))
+        );
     }
 
     public void registerConverterCommand(String name, String description, List<String> aliases, Function1<CommandContext, CommandsAPI.CommandResult> execute) {
@@ -91,5 +104,8 @@ public class Texter extends Plugin {
 
     public CommandsAPI.CommandResult getResult(Map<String, String> map, String textToMap) {
         return new CommandsAPI.CommandResult(Maps.getMappedString(map, textToMap), null, true);
+    }
+    public CommandsAPI.CommandResult getResult(String textToSend) {
+        return new CommandsAPI.CommandResult(textToSend, null, true);
     }
 }
