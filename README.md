@@ -19,6 +19,7 @@ Provides many commands to format your text.
 - space
 - mock
 - leet
+
 Some commands have aliases like `fw`.
   
 Inspired greatly by [texter](https://github.com/SkyBlockDev/texter) and [BetterFormattingRedux](https://github.com/rauenzi/BetterDiscordAddons/tree/master/Plugins/BetterFormattingRedux)
