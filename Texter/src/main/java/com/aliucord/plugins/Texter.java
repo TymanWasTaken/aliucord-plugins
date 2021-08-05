@@ -1,5 +1,6 @@
 package com.aliucord.plugins;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
@@ -13,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import kotlin.jvm.functions.Function1;
 
@@ -31,6 +31,7 @@ public class Texter extends Plugin {
     }
 
 
+    @SuppressLint("NewApi")
     @Override
     public void start(Context context) {
         registerConverterCommand(
@@ -66,13 +67,25 @@ public class Texter extends Plugin {
                 "flip",
                 "Flips your text upside down",
                 Collections.emptyList(),
-                ctx -> getResult(Maps.flippedLetters, new StringBuilder(Objects.requireNonNull(ctx.getString("text"))).reverse().toString())
+                ctx -> getResult(Maps.flippedLetters, Utils.reverse(ctx.getString("text")))
         );
         registerConverterCommand(
                 "clap",
                 "Adds clapping icons to your text",
                 Collections.emptyList(),
-                ctx -> getResult(Utils.clapify(Objects.requireNonNull(ctx.getString("text"))))
+                ctx -> getResult(Utils.clapify(ctx.getString("text")))
+        );
+        registerConverterCommand(
+                "reverse",
+                "Reverses your text",
+                Collections.emptyList(),
+                ctx -> getResult(Utils.reverse(ctx.getString("text")))
+        );
+        registerConverterCommand(
+                "space",
+                "Spaces out your text",
+                Collections.emptyList(),
+                ctx -> getResult(String.join(" ",ctx.getString("text").split("(?!^)")))
         );
     }
 
