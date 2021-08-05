@@ -3,7 +3,9 @@ package com.aliucord.plugins;
 import androidx.annotation.Nullable;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 
 public class Utils {
     public static <T> Map<T, T> createMap(T... entries) {
@@ -23,5 +25,13 @@ public class Utils {
     }
     public static String reverse(String text) {
         return new StringBuilder(text).reverse().toString();
+    }
+    public static String mock(String text) {
+        StringBuilder builder = new StringBuilder();
+        Random random = new Random();
+        for (String character : text.split("(?!^)")) {
+            builder.append(random.nextBoolean() ? character.toLowerCase() : character.toUpperCase());
+        }
+        return builder.toString();
     }
 }

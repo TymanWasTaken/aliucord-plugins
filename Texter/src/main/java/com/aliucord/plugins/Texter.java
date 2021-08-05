@@ -87,6 +87,12 @@ public class Texter extends Plugin {
                 Collections.emptyList(),
                 ctx -> getResult(String.join(" ",ctx.getString("text").split("(?!^)")))
         );
+        registerConverterCommand(
+                "mock",
+                "Capitalizes random parts of your text",
+                Collections.emptyList(),
+                ctx -> getResult(Utils.mock(ctx.getString("text")))
+        );
     }
 
     public void registerConverterCommand(String name, String description, List<String> aliases, Function1<CommandContext, CommandsAPI.CommandResult> execute) {
