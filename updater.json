@@ -5,7 +5,7 @@
         "build": "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/%s.zip"
     },
     "Texter": {
-        "version": "1.0.0",
+        "version": "1.0.1",
         "build": "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/Texter.zip"
     }
 }

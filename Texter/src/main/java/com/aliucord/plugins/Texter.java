@@ -29,7 +29,7 @@ public class Texter extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{new Manifest.Author("Tyman", 487443883127472129L)};
         manifest.description = "A plugin to modify text formatting inspired by plugins like BetterFormattingRedux (for BetterDiscord) and texter (for Powercord)";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json";
         return manifest;
     }
