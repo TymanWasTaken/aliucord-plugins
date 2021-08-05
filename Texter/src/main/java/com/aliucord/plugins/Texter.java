@@ -2,6 +2,8 @@ package com.aliucord.plugins;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 
 import com.aliucord.api.CommandsAPI;
@@ -33,7 +35,6 @@ public class Texter extends Plugin {
     }
 
 
-    @SuppressLint("NewApi")
     @Override
     public void start(Context context) {
         registerConverterCommand(
@@ -85,9 +86,9 @@ public class Texter extends Plugin {
         );
         registerConverterCommand(
                 "space",
-                "Spaces out your text",
+                "Spaces out your textx",
                 Collections.emptyList(),
-                ctx -> getResult(String.join(" ",ctx.getString("text").split("(?!^)")))
+                ctx -> getResult(TextUtils.join(" ",ctx.getString("text").split("(?!^)")))
         );
         registerConverterCommand(
                 "mock",
