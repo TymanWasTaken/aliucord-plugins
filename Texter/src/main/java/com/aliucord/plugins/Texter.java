@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.entities.CommandContext;
 import com.aliucord.entities.Plugin;
+import com.aliucord.plugins.texter.Maps;
+import com.aliucord.plugins.texter.Utils;
 import com.discord.api.commands.ApplicationCommandType;
 import com.discord.models.commands.ApplicationCommandOption;
 

@@ -1,4 +1,4 @@
-package com.aliucord.plugins;
+package com.aliucord.plugins.texter;
 
 import com.aliucord.Logger;
 
@@ -16,7 +16,7 @@ public class Maps {
         }
         return newString.toString();
     }
-    public static Map<String, String> smallLetters = Utils.createMap(
+    public static final Map<String, String> smallLetters = Utils.createMap(
             "q", "ǫ",
             "w", "ᴡ",
             "e", "ᴇ",
@@ -71,7 +71,7 @@ public class Maps {
             "M", "ᴍ"
     );
 
-    public static Map<String, String> smallerLetters = Utils.createMap(
+    public static final Map<String, String> smallerLetters = Utils.createMap(
             "q", "ᑫ",
             "w", "ʷ",
             "e", "ᵉ",
@@ -135,7 +135,7 @@ public class Maps {
             "9", "⁹",
             "0", "⁰"
     );
-    public static Map<String, String> fullWidthLetters = Utils.createMap(
+    public static final Map<String, String> fullWidthLetters = Utils.createMap(
             "q", "ｑ",
             "w", "ｗ",
             "e", "ｅ",
@@ -199,7 +199,7 @@ public class Maps {
             "9", "９",
             "0", "０"
     );
-    public static Map<String, String> emojiLetters = Utils.createMap(
+    public static final Map<String, String> emojiLetters = Utils.createMap(
             "q", ":regional_indicator_q:",
             "w", ":regional_indicator_w:",
             "e", ":regional_indicator_e:",
@@ -263,7 +263,7 @@ public class Maps {
             "9", ":nine:",
             "0", ":zero:"
     );
-    public static Map<String, String> flippedLetters = Utils.createMap(
+    public static final Map<String, String> flippedLetters = Utils.createMap(
             "q", "b",
             "w", "ʍ",
             "e", "ǝ",
@@ -326,7 +326,7 @@ public class Maps {
             "9", "6",
             "0", "0"
     );
-    public static Map<String, String> leetLetters = Utils.createMap(
+    public static final Map<String, String> leetLetters = Utils.createMap(
             "e", "3",
             "r", "Я",
             "t", "7",

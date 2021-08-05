@@ -1,9 +1,6 @@
-package com.aliucord.plugins;
-
-import androidx.annotation.Nullable;
+package com.aliucord.plugins.texter;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
