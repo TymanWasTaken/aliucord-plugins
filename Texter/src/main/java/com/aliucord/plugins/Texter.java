@@ -93,6 +93,14 @@ public class Texter extends Plugin {
                 Collections.emptyList(),
                 ctx -> getResult(Utils.mock(ctx.getString("text")))
         );
+        registerConverterCommand(
+                "leet",
+                "Makes your text 1337 style",
+                Collections.singletonList(
+                        "leetify"
+                ),
+                ctx -> getResult(Maps.leetLetters, ctx.getString("text"))
+        );
     }
 
     public void registerConverterCommand(String name, String description, List<String> aliases, Function1<CommandContext, CommandsAPI.CommandResult> execute) {

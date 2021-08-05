@@ -68,17 +68,7 @@ public class Maps {
             "V", "ᴠ",
             "B", "ʙ",
             "N", "ɴ",
-            "M", "ᴍ",
-            "1", "1",
-            "2", "2",
-            "3", "3",
-            "4", "4",
-            "5", "5",
-            "6", "6",
-            "7", "7",
-            "8", "8",
-            "9", "9",
-            "0", "0"
+            "M", "ᴍ"
     );
 
     public static Map<String, String> smallerLetters = Utils.createMap(
@@ -282,7 +272,6 @@ public class Maps {
             "y", "ʎ",
             "u", "n",
             "i", "ᴉ",
-            "o", "o",
             "p", "d",
             "a", "ɐ",
             "s", "s",
@@ -336,5 +325,27 @@ public class Maps {
             "8", "8",
             "9", "6",
             "0", "0"
+    );
+    public static Map<String, String> leetLetters = Utils.createMap(
+            "e", "3",
+            "r", "Я",
+            "t", "7",
+            "o", "0",
+            "a", "4",
+            "s", "5",
+            "h", "#",
+            "l", "1",
+            "z", "2",
+            "b", "8",
+            "E", "3",
+            "R", "Я",
+            "T", "7",
+            "O", "0",
+            "A", "4",
+            "S", "5",
+            "H", "#",
+            "L", "1",
+            "Z", "2",
+            "B", "8"
     );
 }
