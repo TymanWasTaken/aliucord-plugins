@@ -9,7 +9,7 @@
         "build": "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/Texter.zip"
     },
     "ShowNames": {
-        "version": "1.0.0",
+        "version": "1.0.1",
         "build": "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/ShowNames.zip",
         "minimumDiscordVersion": 87203
     }
