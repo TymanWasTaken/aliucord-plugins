@@ -1,13 +1,19 @@
 package com.aliucord.plugins;
 
 import android.content.Context;
+import android.graphics.Color;
+
 import androidx.annotation.NonNull;
 import androidx.core.graphics.ColorUtils;
 
+import com.aliucord.Logger;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
+import com.discord.api.role.GuildRole;
 import com.discord.models.member.GuildMember;
+import com.discord.restapi.RestAPIParams;
 import com.discord.stores.StoreStream;
+import com.discord.utilities.guilds.RoleUtils;
 
 @SuppressWarnings("unused")
 public class ShowNames extends Plugin {
@@ -18,9 +24,9 @@ public class ShowNames extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{new Manifest.Author("Tyman", 487443883127472129L)};
         manifest.description = "A plugin that changes the color of usernames to stop them from blending into the background.";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json";
-        manifest.changelog = "# Version 1.0.0\nInitial release";
+        manifest.changelog = "# Version 1.0.0\nInitial release\n# Version 1.0.1\nFixed changing color when on amoled mode and user has no role color";
         return manifest;
     }
 
@@ -34,6 +40,9 @@ public class ShowNames extends Plugin {
             var member = (GuildMember) callFrame.args[0];
             var color = member.getColor();
             var theme = StoreStream.getUserSettingsSystem().getTheme();
+            if (color == -16777216) { // Default (no role) color
+                return;
+            }
             var colorBrightness = ColorUtils.calculateLuminance(color);
             if (colorBrightness < 0.01 && theme.equals("pureEvil")) { // pureEvil = AMOLED
                 callFrame.setResult(0xFF333333);
