@@ -19,7 +19,7 @@ public class ShowNames extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{new Manifest.Author("Tyman", 487443883127472129L)};
         manifest.description = "A plugin that changes the color of usernames to stop them from blending into the background.";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json";
         try {
             manifest.changelog = "# Version 1.0.0\nInitial release\n# Version 1.0.1\nFixed changing color when on amoled mode and user has no role color";
