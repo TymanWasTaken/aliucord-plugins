@@ -23,3 +23,7 @@ Provides many commands to format your text.
 Some commands have aliases like `fw`.
   
 Inspired greatly by [texter](https://github.com/SkyBlockDev/texter) and [BetterFormattingRedux](https://github.com/rauenzi/BetterDiscordAddons/tree/master/Plugins/BetterFormattingRedux)
+
+### [ShowNames](https://github.com/TymanWasTaken/aliucord-plugins/raw/builds/ShowNames.zip)
+
+A plugin that changes the color of usernames to stop them from blending into the background. It will make colors lighter if they match close to your theme's background color (in discord settings). Only works on messages for now. 
