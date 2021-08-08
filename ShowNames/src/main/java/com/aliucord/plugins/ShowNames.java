@@ -2,18 +2,13 @@ package com.aliucord.plugins;
 
 import android.content.Context;
 import android.graphics.Color;
-
 import androidx.annotation.NonNull;
 import androidx.core.graphics.ColorUtils;
 
-import com.aliucord.Logger;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
-import com.discord.api.role.GuildRole;
 import com.discord.models.member.GuildMember;
-import com.discord.restapi.RestAPIParams;
 import com.discord.stores.StoreStream;
-import com.discord.utilities.guilds.RoleUtils;
 
 @SuppressWarnings("unused")
 public class ShowNames extends Plugin {
