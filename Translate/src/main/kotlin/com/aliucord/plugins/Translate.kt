@@ -23,12 +23,10 @@ import com.discord.api.message.MessageFlags
 import com.aliucord.utils.ReflectUtils
 import com.discord.models.message.Message
 import com.discord.stores.StoreStream
-import com.google.gson.Gson
+import org.json.JSONArray
 
 
 class Translate : Plugin() {
-    val gson = Gson()
-
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Manifest.Author("Tyman", 487443883127472129L))
         description = "Adds an option to translate messages."
@@ -50,7 +48,31 @@ class Translate : Plugin() {
                 val message = (it.args[0] as WidgetChatListActions.Model).message
                 Utils.threadPool.execute {
                     val response = translateMessage(message.content)
-                    val localMessage = LocalMessageCreatorsKt.createLocalMessage(response, message.channelId, Utils.buildClyde("Translator plugin", null), null, false, false, null, null, ClockFactory.get(), null, null, null, null, null, null, null)
+                    val localMessage = LocalMessageCreatorsKt.createLocalMessage(
+                            """
+                                Source text: ${response.sourceText}
+                                Translated text: ${response.translatedText}
+                                Source language: ${response.sourceLanguage}
+                                Translated language: ${response.translatedLanguage}
+                            """.trimIndent(),
+                            message.channelId,
+                            Utils.buildClyde(
+                                    "Translator plugin",
+                                    "https://cdn.discordapp.com/attachments/829790281565601899/880650137486106654/Google_Translate_Icon.png"),
+                            null,
+                            false,
+                            false,
+                            null,
+                            null,
+                            ClockFactory.get(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                    )
                     ReflectUtils.setField(Message::class.java, localMessage, "flags", MessageFlags.EPHEMERAL)
                     StoreMessages.`access$handleLocalMessageCreate`(StoreStream.getMessages(), localMessage)
                 }
@@ -71,7 +93,7 @@ class Translate : Plugin() {
 
     override fun stop(context: Context?) = patcher.unpatchAll()
 
-    private fun translateMessage(text: String): String {
+    private fun translateMessage(text: String): TranslateData {
         val queryBuilder = Http.QueryBuilder("https://translate.googleapis.com/translate_a/single").run {
             append("client", "gtx")
             append("sl", "auto")
@@ -79,15 +101,19 @@ class Translate : Plugin() {
             append("dt", "t")
             append("q", text)
         }
-        val translated = Http.Request(queryBuilder.toString(), "GET").apply {
+        val translatedJson = Http.Request(queryBuilder.toString(), "GET").apply {
             setHeader("Content-Type", "application/json")
             setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4592.0 Safari/537.36")
         }
                 .execute()
                 .text()
-        val jsonArray = gson.fr
-        return TranslateData(
+        val parsedJson = JSONArray(translatedJson)
 
+        return TranslateData(
+                sourceLanguage = parsedJson.getString(2),
+                translatedLanguage = "en",
+                sourceText = text,
+                translatedText = parsedJson.getJSONArray(0).getJSONArray(0).getString(0)
         )
     }
 }
