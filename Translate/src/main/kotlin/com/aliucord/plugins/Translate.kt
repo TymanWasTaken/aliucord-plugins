@@ -31,6 +31,11 @@ class Translate : Plugin() {
         description = "Adds an option to translate messages."
         version = "1.0.0"
         updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
+        changelog =
+                """
+                    # Version 1.0.0
+                    - Initial release
+                """.trimIndent()
     }
 
     override fun start(ctx: Context) {
