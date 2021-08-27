@@ -1,8 +1,8 @@
 package com.aliucord.plugins
 
 data class TranslateData(
-        val originalLanguage: String,
+        val sourceLanguage: String,
         val translatedLanguage: String,
-        val originalText: String,
+        val sourceText: String,
         val translatedText: String
 )
