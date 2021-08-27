@@ -1,16 +1,15 @@
 {
     "default": {
-        "minimumDiscordVersion": 86205,
-        "version": "1.0.0",
+        "minimumDiscordVersion": 87203,
         "build": "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/%s.zip"
     },
     "Texter": {
-        "version": "1.0.2",
-        "build": "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/Texter.zip"
+        "version": "1.0.2"
     },
     "ShowNames": {
-        "version": "1.0.3",
-        "build": "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/ShowNames.zip",
-        "minimumDiscordVersion": 87203
+        "version": "1.0.3"
+    },
+    "Translate": {
+        "version": "1.0.0"
     }
 }
