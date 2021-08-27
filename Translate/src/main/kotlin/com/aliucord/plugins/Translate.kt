@@ -7,7 +7,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.widget.NestedScrollView
 import com.aliucord.Http
-import com.aliucord.Logger
 import com.aliucord.Utils
 import com.aliucord.entities.Plugin
 import com.aliucord.patcher.PinePatchFn
@@ -18,9 +17,7 @@ import com.discord.utilities.time.ClockFactory
 import com.discord.widgets.chat.list.actions.WidgetChatListActions
 import com.lytefast.flexinput.R
 import com.discord.stores.StoreMessages
-
 import com.discord.api.message.MessageFlags
-
 import com.aliucord.utils.ReflectUtils
 import com.discord.api.message.MessageReference
 import com.discord.models.message.Message
@@ -28,15 +25,11 @@ import com.discord.stores.StoreStream
 import org.json.JSONArray
 import com.aliucord.wrappers.ChannelWrapper
 
-
-
-
-
 class Translate : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Manifest.Author("Tyman", 487443883127472129L))
         description = "Adds an option to translate messages."
-        version = "0.0.1"
+        version = "1.0.0"
         updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
     }
 
@@ -57,16 +50,17 @@ class Translate : Plugin() {
                     val localMessage = LocalMessageCreatorsKt.createLocalMessage(
                             // AAAAAAAAAAAAAAAAAA why is trimIndent broken
 """Translated text: 
-    
+```
 ${response.translatedText}
-
-https://discord.com/${message.guildId()}/${message.channelId}/${message.id}
+```
 Source language: ${response.sourceLanguage}
-Translated language: ${response.translatedLanguage}""",
+Translated language: ${response.translatedLanguage}
+Message link: https://discord.com/${message.guildId()}/${message.channelId}/${message.id}""",
                             message.channelId,
                             Utils.buildClyde(
-                                    "Translator plugin",
-                                    "https://cdn.discordapp.com/attachments/829790281565601899/880650137486106654/Google_Translate_Icon.png"),
+                                    "Translator",
+                                    "https://cdn.discordapp.com/attachments/829790281565601899/880681034931380254/g_translate_white_48dp.png"
+                            ),
                             null,
                             false,
                             false,
@@ -133,6 +127,6 @@ Translated language: ${response.translatedLanguage}""",
 
     private fun Message.guildId(): Long? {
         val channel = ChannelWrapper(StoreStream.getChannels().getChannel(this.channelId))
-        return if (channel.isDM()) null else channel.guildId
+        return if (channel.isGuild()) channel.guildId else null
     }
 }
