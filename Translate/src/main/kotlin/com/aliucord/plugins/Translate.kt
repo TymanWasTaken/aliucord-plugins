@@ -7,6 +7,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.widget.NestedScrollView
 import com.aliucord.Http
+import com.aliucord.Logger
 import com.aliucord.Utils
 import com.aliucord.entities.Plugin
 import com.aliucord.patcher.PinePatchFn
@@ -21,9 +22,14 @@ import com.discord.stores.StoreMessages
 import com.discord.api.message.MessageFlags
 
 import com.aliucord.utils.ReflectUtils
+import com.discord.api.message.MessageReference
 import com.discord.models.message.Message
 import com.discord.stores.StoreStream
 import org.json.JSONArray
+import com.aliucord.wrappers.ChannelWrapper
+
+
+
 
 
 class Translate : Plugin() {
@@ -35,7 +41,7 @@ class Translate : Plugin() {
     }
 
     override fun start(ctx: Context) {
-        val icon = ctx.resources.getDrawable(R.d.ic_star_24dp, null).mutate()
+        val icon = ctx.resources.getDrawable(R.d.ic_locale_24dp, null).mutate()
         val viewId = View.generateViewId()
         val messageContextMenu = WidgetChatListActions::class.java
         val getBinding = messageContextMenu.getDeclaredMethod("getBinding").apply { isAccessible = true }
@@ -49,12 +55,14 @@ class Translate : Plugin() {
                 Utils.threadPool.execute {
                     val response = translateMessage(message.content)
                     val localMessage = LocalMessageCreatorsKt.createLocalMessage(
-                            """
-                                Source text: ${response.sourceText}
-                                Translated text: ${response.translatedText}
-                                Source language: ${response.sourceLanguage}
-                                Translated language: ${response.translatedLanguage}
-                            """.trimIndent(),
+                            // AAAAAAAAAAAAAAAAAA why is trimIndent broken
+"""Translated text: 
+    
+${response.translatedText}
+
+https://discord.com/${message.guildId()}/${message.channelId}/${message.id}
+Source language: ${response.sourceLanguage}
+Translated language: ${response.translatedLanguage}""",
                             message.channelId,
                             Utils.buildClyde(
                                     "Translator plugin",
@@ -70,11 +78,17 @@ class Translate : Plugin() {
                             null,
                             null,
                             null,
-                            null,
+                            MessageReference(
+                                    message.guildId(), // use extension function instead because discord is bad at coding
+                                    message.channelId,
+                                    message.id
+                            ),
                             null
                     )
                     ReflectUtils.setField(Message::class.java, localMessage, "flags", MessageFlags.EPHEMERAL)
                     StoreMessages.`access$handleLocalMessageCreate`(StoreStream.getMessages(), localMessage)
+                    Utils.showToast(ctx, "Translated message")
+                    menu.dismiss()
                 }
             }
         })
@@ -115,5 +129,10 @@ class Translate : Plugin() {
                 sourceText = text,
                 translatedText = parsedJson.getJSONArray(0).getJSONArray(0).getString(0)
         )
+    }
+
+    private fun Message.guildId(): Long? {
+        val channel = ChannelWrapper(StoreStream.getChannels().getChannel(this.channelId))
+        return if (channel.isDM()) null else channel.guildId
     }
 }
