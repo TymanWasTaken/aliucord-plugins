@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.core.widget.NestedScrollView
 import com.aliucord.Http
 import com.aliucord.Utils
+import com.aliucord.api.CommandsAPI
 import com.aliucord.entities.Plugin
 import com.aliucord.patcher.PinePatchFn
 import com.discord.databinding.WidgetChatListActionsBinding
@@ -24,22 +25,26 @@ import com.discord.models.message.Message
 import com.discord.stores.StoreStream
 import org.json.JSONArray
 import com.aliucord.wrappers.ChannelWrapper
+import com.discord.api.commands.ApplicationCommandType
+import com.discord.models.commands.ApplicationCommandOption
 
 class Translate : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Manifest.Author("Tyman", 487443883127472129L))
         description = "Adds an option to translate messages."
-        version = "1.0.0"
+        version = "1.1.0"
         updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
         changelog =
                 """
                     # Version 1.0.0
                     - Initial release
+                    # Version 1.1.0
+                    - Add /translate to translate text from one language to another, and send it in chat by default.
                 """.trimIndent()
     }
 
-    override fun start(ctx: Context) {
-        val icon = ctx.resources.getDrawable(R.d.ic_locale_24dp, null).mutate()
+    override fun start(context: Context) {
+        val icon = context.resources.getDrawable(R.d.ic_locale_24dp, null).mutate()
         val viewId = View.generateViewId()
         val messageContextMenu = WidgetChatListActions::class.java
         val getBinding = messageContextMenu.getDeclaredMethod("getBinding").apply { isAccessible = true }
@@ -86,7 +91,7 @@ Message link: https://discord.com/${message.guildId()}/${message.channelId}/${me
                     )
                     ReflectUtils.setField(Message::class.java, localMessage, "flags", MessageFlags.EPHEMERAL)
                     StoreMessages.`access$handleLocalMessageCreate`(StoreStream.getMessages(), localMessage)
-                    Utils.showToast(ctx, "Translated message")
+                    Utils.showToast(context, "Translated message")
                     menu.dismiss()
                 }
             }
@@ -94,23 +99,44 @@ Message link: https://discord.com/${message.guildId()}/${message.channelId}/${me
 
         patcher.patch(messageContextMenu, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), PinePatchFn {
             val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
-            val context = linearLayout.context
+            val ctx = linearLayout.context
             icon.setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
-            linearLayout.addView(TextView(context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
+            linearLayout.addView(TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
                 id = viewId
                 text = "Translate message"
                 setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
             })
         })
+
+        commands.registerCommand(
+                "translate",
+                "Translates text from one language to another, sends by default",
+                listOf(
+                        ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to translate", null, true, true, null, null),
+                        ApplicationCommandOption(ApplicationCommandType.STRING, "to", "The language to translate to (default en, must be a language code)", null, false, true, null, null),
+                        ApplicationCommandOption(ApplicationCommandType.STRING, "from", "The language to translate from (default auto, must be a language code)", null, false, true, null, null),
+                        ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether or not to send the message in chat (default true)", null, false, true, null, null)
+                )
+        ) { ctx ->
+            return@registerCommand CommandsAPI.CommandResult(
+                    translateMessage(
+                            ctx.getRequiredString("text"),
+                            ctx.getString("from"),
+                            ctx.getString("to")
+                    ).translatedText,
+                    null,
+                    ctx.getBoolOrDefault("send", true)
+            )
+        }
     }
 
     override fun stop(context: Context?) = patcher.unpatchAll()
 
-    private fun translateMessage(text: String): TranslateData {
+    private fun translateMessage(text: String, from: String? = "auto", to: String? = "en"): TranslateData {
         val queryBuilder = Http.QueryBuilder("https://translate.googleapis.com/translate_a/single").run {
             append("client", "gtx")
-            append("sl", "auto")
-            append("tl", "en") // TODO: Don't hardcode this
+            append("sl", from ?: "auto")
+            append("tl", to ?: "en") // TODO: Don't hardcode this
             append("dt", "t")
             append("q", text)
         }
