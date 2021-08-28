@@ -13,7 +13,7 @@ class ShowNames : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Author("Tyman", 487443883127472129L))
         description = "A plugin that changes the color of usernames to stop them from blending into the background."
-        version = "1.0.3"
+        version = "1.0.4"
         updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
         changelog =
                 """
@@ -25,12 +25,14 @@ class ShowNames : Plugin() {
                     - Fixed crashing on outdated aliucord
                     # Version 1.0.3
                     - Converted code to use kotlin
+                    # Version 1.0.4
+                    - Fixed errors while hooking
                 """.trimIndent()
     }
 
     override fun start(context: Context) {
         patcher.patch(WidgetChatListAdapterItemMessage::class.java.getDeclaredMethod("getAuthorTextColor", GuildMember::class.java), PinePatchFn {
-            val member = it.args[0] as GuildMember
+            val member = it.args[0] as GuildMember? ?: return@PinePatchFn
             val color = member.color
             val theme = StoreStream.getUserSettingsSystem().theme
             if (color == -16777216) { // Default (no role) color
