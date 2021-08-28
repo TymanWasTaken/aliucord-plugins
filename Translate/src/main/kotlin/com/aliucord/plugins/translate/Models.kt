@@ -1,4 +1,4 @@
-package com.aliucord.plugins
+package com.aliucord.plugins.translate
 
 data class TranslateData(
         val sourceLanguage: String,
