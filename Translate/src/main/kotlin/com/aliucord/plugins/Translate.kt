@@ -3,11 +3,14 @@ package com.aliucord.plugins
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.text.Spanned
+import android.text.style.RelativeSizeSpan
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
+import com.aliucord.CollectionUtils
 import com.aliucord.Http
 import com.aliucord.Utils
 import com.aliucord.api.CommandsAPI
@@ -15,25 +18,27 @@ import com.aliucord.entities.Plugin
 import com.aliucord.patcher.PinePatchFn
 import com.aliucord.plugins.translate.PluginSettings
 import com.aliucord.plugins.translate.TranslateData
-import com.discord.databinding.WidgetChatListActionsBinding
-import com.discord.utilities.message.LocalMessageCreatorsKt
-import com.discord.utilities.time.ClockFactory
-import com.discord.widgets.chat.list.actions.WidgetChatListActions
-import com.lytefast.flexinput.R
-import com.discord.stores.StoreMessages
-import com.discord.api.message.MessageFlags
-import com.aliucord.utils.ReflectUtils
-import com.discord.api.message.MessageReference
-import com.discord.models.message.Message
-import com.discord.stores.StoreStream
-import org.json.JSONArray
-import com.aliucord.wrappers.ChannelWrapper
 import com.discord.api.commands.ApplicationCommandType
+import com.discord.databinding.WidgetChatListActionsBinding
 import com.discord.models.commands.ApplicationCommandOption
+import com.discord.utilities.textprocessing.node.EditedMessageNode
+import com.discord.utilities.view.text.SimpleDraweeSpanTextView
+import com.discord.widgets.chat.list.WidgetChatList
+import com.discord.widgets.chat.list.actions.WidgetChatListActions
+import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage
+import com.discord.widgets.chat.list.entries.MessageEntry
+import com.facebook.drawee.span.DraweeSpanStringBuilder
+import com.lytefast.flexinput.R
+import org.json.JSONArray
+import top.canyie.pine.Pine.CallFrame
+import java.lang.reflect.Field
+import java.util.regex.Pattern
 
 class Translate : Plugin() {
-
     lateinit var pluginIcon: Drawable
+    private val translatedMessages = mutableMapOf<Long, TranslateData>()
+    private var chatList: WidgetChatList? = null
+    private val messageLoggerEditedRegex = Pattern.compile("(?:.+ \\(.+: .+\\)\\n)+(.+)\$")
 
     init {
         settingsTab = SettingsTab(PluginSettings::class.java).withArgs(settings)
@@ -42,7 +47,7 @@ class Translate : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Manifest.Author("Tyman", 487443883127472129L))
         description = "Adds an option to translate messages."
-        version = "1.1.2"
+        version = "1.2.0"
         updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
         changelog =
                 """
@@ -55,6 +60,8 @@ class Translate : Plugin() {
                     # Version 1.1.2
                     * Fixed message links not having /channels/
                     * Moved classes to com.aliucord.plugins.translate
+                    # Version 1.2.0
+                    * Edits the message with the translated text instead of creating a new local message
                 """.trimIndent()
     }
 
@@ -63,68 +70,8 @@ class Translate : Plugin() {
     }
 
     override fun start(context: Context) {
-        val viewId = View.generateViewId()
-        val messageContextMenu = WidgetChatListActions::class.java
-        val getBinding = messageContextMenu.getDeclaredMethod("getBinding").apply { isAccessible = true }
-
-        patcher.patch(messageContextMenu.getDeclaredMethod("configureUI", WidgetChatListActions.Model::class.java), PinePatchFn {
-            val menu = it.thisObject as WidgetChatListActions
-            val binding = getBinding.invoke(menu) as WidgetChatListActionsBinding
-            val translateButton = binding.a.findViewById<TextView>(viewId)
-            translateButton.setOnClickListener { _ ->
-                val message = (it.args[0] as WidgetChatListActions.Model).message
-                Utils.threadPool.execute {
-                    val response = translateMessage(message.content)
-                    val localMessage = LocalMessageCreatorsKt.createLocalMessage(
-                            // AAAAAAAAAAAAAAAAAA why is trimIndent broken
-"""Translated text: 
-```
-${response.translatedText}
-```
-Source language: ${response.sourceLanguage}
-Translated language: ${response.translatedLanguage}
-Message link: https://discord.com/channels/${message.guildId()}/${message.channelId}/${message.id}""",
-                            message.channelId,
-                            Utils.buildClyde(
-                                    "Translator",
-                                    "https://cdn.discordapp.com/attachments/829790281565601899/880681034931380254/g_translate_white_48dp.png"
-                            ),
-                            null,
-                            false,
-                            false,
-                            null,
-                            null,
-                            ClockFactory.get(),
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            MessageReference(
-                                    message.guildId(), // use extension function instead because discord is bad at coding
-                                    message.channelId,
-                                    message.id
-                            ),
-                            null
-                    )
-                    ReflectUtils.setField(Message::class.java, localMessage, "flags", MessageFlags.EPHEMERAL)
-                    StoreMessages.`access$handleLocalMessageCreate`(StoreStream.getMessages(), localMessage)
-                    Utils.showToast(context, "Translated message")
-                    menu.dismiss()
-                }
-            }
-        })
-
-        patcher.patch(messageContextMenu, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), PinePatchFn {
-            val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
-            val ctx = linearLayout.context
-            linearLayout.addView(TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
-                id = viewId
-                text = "Translate message"
-                setCompoundDrawablesRelativeWithIntrinsicBounds(pluginIcon, null, null, null)
-            })
-        })
-
+        patchMessageContextMenu(context)
+        patchProcessMessageText()
         commands.registerCommand(
                 "translate",
                 "Translates text from one language to another, sends by default",
@@ -145,6 +92,84 @@ Message link: https://discord.com/channels/${message.guildId()}/${message.channe
                     ctx.getBoolOrDefault("send", true)
             )
         }
+    }
+
+    private fun DraweeSpanStringBuilder.setTranslated(translateData: TranslateData, context: Context) {
+        val contentStartIndex = messageLoggerEditedRegex.matcher(this.toString()).let {
+            if (it.find()) {
+                it.start(1)
+            } else 0
+        }
+        this.replace(contentStartIndex, contentStartIndex + translateData.sourceText.length, translateData.translatedText)
+        val textEnd = this.length
+        this.append(" (translated: ${translateData.sourceLanguage} -> ${translateData.translatedLanguage})")
+        this.setSpan(RelativeSizeSpan(0.75f), textEnd, this.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        if (textEnd != this.length) {
+            this.setSpan(EditedMessageNode.Companion.`access$getForegroundColorSpan`(EditedMessageNode.Companion, context),
+                    textEnd, this.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+    }
+
+    private fun patchProcessMessageText() {
+        patcher.patch(WidgetChatList::class.java.getDeclaredConstructor(), PinePatchFn { callFrame: CallFrame -> chatList = callFrame.thisObject as WidgetChatList })
+
+        val mDraweeStringBuilder: Field = SimpleDraweeSpanTextView::class.java.getDeclaredField("mDraweeStringBuilder")
+        mDraweeStringBuilder.isAccessible = true
+        patcher.patch(WidgetChatListAdapterItemMessage::class.java, "processMessageText", arrayOf(SimpleDraweeSpanTextView::class.java, MessageEntry::class.java), PinePatchFn { callFrame: CallFrame ->
+            val messageEntry = callFrame.args[1] as MessageEntry
+            val message = messageEntry.message ?: return@PinePatchFn
+            val id = message.id
+            val translateData = translatedMessages[id] ?: return@PinePatchFn
+            if (translateData.sourceText != message.content) {
+                translatedMessages.remove(id)
+                return@PinePatchFn
+            }
+            val textView = callFrame.args[0] as SimpleDraweeSpanTextView
+            val builder = mDraweeStringBuilder[textView] as DraweeSpanStringBuilder?
+                    ?: return@PinePatchFn
+            val context = textView.context
+            builder.setTranslated(translateData, context)
+            textView.setDraweeSpanStringBuilder(builder)
+        })
+    }
+
+    private fun patchMessageContextMenu(ctx: Context) {
+        val viewId = View.generateViewId()
+        val messageContextMenu = WidgetChatListActions::class.java
+        val getBinding = messageContextMenu.getDeclaredMethod("getBinding").apply { isAccessible = true }
+
+        patcher.patch(messageContextMenu.getDeclaredMethod("configureUI", WidgetChatListActions.Model::class.java), PinePatchFn {
+            val menu = it.thisObject as WidgetChatListActions
+            val binding = getBinding.invoke(menu) as WidgetChatListActionsBinding
+            val translateButton = binding.a.findViewById<TextView>(viewId)
+            translateButton.setOnClickListener { _ ->
+                val message = (it.args[0] as WidgetChatListActions.Model).message
+                Utils.threadPool.execute {
+                    val response = translateMessage(message.content)
+                    translatedMessages[message.id] = response
+                    if (chatList != null) {
+                        val adapter = WidgetChatList.`access$getAdapter$p`(chatList)
+                        val data = adapter.internalData
+                        val i = CollectionUtils.findIndex(data) { m ->
+                            m is MessageEntry && m.message.id == message.id
+                        }
+                        if (i != -1) adapter.notifyItemChanged(i)
+                    }
+                    Utils.showToast(ctx, "Translated message")
+                    menu.dismiss()
+                }
+            }
+        })
+
+        patcher.patch(messageContextMenu, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), PinePatchFn {
+            val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
+            val context = linearLayout.context
+            linearLayout.addView(TextView(context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
+                id = viewId
+                text = "Translate message"
+                setCompoundDrawablesRelativeWithIntrinsicBounds(pluginIcon, null, null, null)
+            })
+        })
     }
 
     override fun stop(context: Context?) = patcher.unpatchAll()
@@ -175,8 +200,8 @@ Message link: https://discord.com/channels/${message.guildId()}/${message.channe
         )
     }
 
-    private fun Message.guildId(): Long? {
-        val channel = ChannelWrapper(StoreStream.getChannels().getChannel(this.channelId))
-        return if (channel.isGuild()) channel.guildId else null
-    }
+//    private fun Message.guildId(): Long? {
+//        val channel = ChannelWrapper(StoreStream.getChannels().getChannel(this.channelId))
+//        return if (channel.isGuild()) channel.guildId else null
+//    }
 }
