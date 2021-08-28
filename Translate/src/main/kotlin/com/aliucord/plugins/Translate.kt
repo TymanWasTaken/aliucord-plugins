@@ -13,8 +13,9 @@ import com.aliucord.Utils
 import com.aliucord.api.CommandsAPI
 import com.aliucord.entities.Plugin
 import com.aliucord.patcher.PinePatchFn
+import com.aliucord.plugins.translate.PluginSettings
+import com.aliucord.plugins.translate.TranslateData
 import com.discord.databinding.WidgetChatListActionsBinding
-import com.discord.utilities.color.ColorCompat
 import com.discord.utilities.message.LocalMessageCreatorsKt
 import com.discord.utilities.time.ClockFactory
 import com.discord.widgets.chat.list.actions.WidgetChatListActions
@@ -41,16 +42,19 @@ class Translate : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Manifest.Author("Tyman", 487443883127472129L))
         description = "Adds an option to translate messages."
-        version = "1.1.1"
+        version = "1.1.2"
         updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
         changelog =
                 """
                     # Version 1.0.0
-                    - Initial release
+                    * Initial release
                     # Version 1.1.0
-                    - Add /translate to translate text from one language to another, and send it in chat by default.
+                    * Add /translate to translate text from one language to another, and send it in chat by default.
                     # Version 1.1.1
-                    - Added settings to modify the default translation language
+                    * Added settings to modify the default translation language
+                    # Version 1.1.2
+                    * Fixed message links not having /channels/
+                    * Moved classes to com.aliucord.plugins.translate
                 """.trimIndent()
     }
 
@@ -79,7 +83,7 @@ ${response.translatedText}
 ```
 Source language: ${response.sourceLanguage}
 Translated language: ${response.translatedLanguage}
-Message link: https://discord.com/${message.guildId()}/${message.channelId}/${message.id}""",
+Message link: https://discord.com/channels/${message.guildId()}/${message.channelId}/${message.id}""",
                             message.channelId,
                             Utils.buildClyde(
                                     "Translator",
