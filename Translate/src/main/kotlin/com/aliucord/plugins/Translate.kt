@@ -1,10 +1,12 @@
 package com.aliucord.plugins
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import com.aliucord.Http
 import com.aliucord.Utils
@@ -29,10 +31,17 @@ import com.discord.api.commands.ApplicationCommandType
 import com.discord.models.commands.ApplicationCommandOption
 
 class Translate : Plugin() {
+
+    lateinit var pluginIcon: Drawable
+
+    init {
+        settingsTab = SettingsTab(PluginSettings::class.java).withArgs(settings)
+    }
+
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Manifest.Author("Tyman", 487443883127472129L))
         description = "Adds an option to translate messages."
-        version = "1.1.0"
+        version = "1.1.1"
         updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
         changelog =
                 """
@@ -40,11 +49,16 @@ class Translate : Plugin() {
                     - Initial release
                     # Version 1.1.0
                     - Add /translate to translate text from one language to another, and send it in chat by default.
+                    # Version 1.1.1
+                    - Added settings to modify the default translation language
                 """.trimIndent()
     }
 
+    override fun load(ctx: Context) {
+        pluginIcon = ContextCompat.getDrawable(ctx, R.d.ic_locale_24dp)!!
+    }
+
     override fun start(context: Context) {
-        val icon = context.resources.getDrawable(R.d.ic_locale_24dp, null).mutate()
         val viewId = View.generateViewId()
         val messageContextMenu = WidgetChatListActions::class.java
         val getBinding = messageContextMenu.getDeclaredMethod("getBinding").apply { isAccessible = true }
@@ -100,11 +114,10 @@ Message link: https://discord.com/${message.guildId()}/${message.channelId}/${me
         patcher.patch(messageContextMenu, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), PinePatchFn {
             val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
             val ctx = linearLayout.context
-            icon.setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
             linearLayout.addView(TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
                 id = viewId
                 text = "Translate message"
-                setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
+                setCompoundDrawablesRelativeWithIntrinsicBounds(pluginIcon, null, null, null)
             })
         })
 
@@ -132,11 +145,13 @@ Message link: https://discord.com/${message.guildId()}/${message.channelId}/${me
 
     override fun stop(context: Context?) = patcher.unpatchAll()
 
-    private fun translateMessage(text: String, from: String? = "auto", to: String? = "en"): TranslateData {
+    private fun translateMessage(text: String, from: String? = null, to: String? = null): TranslateData {
+        val toLang = to ?: settings.getString("defaultLanguage", "en")
+        val fromLang = from ?: "auto"
         val queryBuilder = Http.QueryBuilder("https://translate.googleapis.com/translate_a/single").run {
             append("client", "gtx")
-            append("sl", from ?: "auto")
-            append("tl", to ?: "en") // TODO: Don't hardcode this
+            append("sl", fromLang)
+            append("tl", toLang)
             append("dt", "t")
             append("q", text)
         }
@@ -150,7 +165,7 @@ Message link: https://discord.com/${message.guildId()}/${message.channelId}/${me
 
         return TranslateData(
                 sourceLanguage = parsedJson.getString(2),
-                translatedLanguage = "en",
+                translatedLanguage = toLang,
                 sourceText = text,
                 translatedText = parsedJson.getJSONArray(0).getJSONArray(0).getString(0)
         )
