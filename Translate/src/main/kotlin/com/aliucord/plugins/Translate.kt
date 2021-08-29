@@ -18,7 +18,10 @@ import com.aliucord.entities.Plugin
 import com.aliucord.patcher.PinePatchFn
 import com.aliucord.plugins.translate.PluginSettings
 import com.aliucord.plugins.translate.TranslateData
+import com.aliucord.plugins.translate.languageCodeChoices
+import com.aliucord.plugins.translate.languageCodes
 import com.discord.api.commands.ApplicationCommandType
+import com.discord.api.commands.CommandChoice
 import com.discord.databinding.WidgetChatListActionsBinding
 import com.discord.models.commands.ApplicationCommandOption
 import com.discord.utilities.textprocessing.node.EditedMessageNode
@@ -47,7 +50,7 @@ class Translate : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Manifest.Author("Tyman", 487443883127472129L))
         description = "Adds an option to translate messages."
-        version = "1.2.0"
+        version = "1.2.1"
         updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
         changelog =
                 """
@@ -62,6 +65,9 @@ class Translate : Plugin() {
                     * Moved classes to com.aliucord.plugins.translate
                     # Version 1.2.0
                     * Edits the message with the translated text instead of creating a new local message
+                    # Version 1.2.1
+                    * Improved/added language code validation
+                    * Added a list of language codes to plugin settings
                 """.trimIndent()
     }
 
@@ -77,8 +83,8 @@ class Translate : Plugin() {
                 "Translates text from one language to another, sends by default",
                 listOf(
                         ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to translate", null, true, true, null, null),
-                        ApplicationCommandOption(ApplicationCommandType.STRING, "to", "The language to translate to (default en, must be a language code)", null, false, true, null, null),
-                        ApplicationCommandOption(ApplicationCommandType.STRING, "from", "The language to translate from (default auto, must be a language code)", null, false, true, null, null),
+                        ApplicationCommandOption(ApplicationCommandType.STRING, "to", "The language to translate to (default en, must be a language code described in plugin settings)", null, false, true, languageCodeChoices, null),
+                        ApplicationCommandOption(ApplicationCommandType.STRING, "from", "The language to translate from (default auto, must be a language code described in plugin settings)", null, false, true, languageCodeChoices, null),
                         ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether or not to send the message in chat (default true)", null, false, true, null, null)
                 )
         ) { ctx ->
