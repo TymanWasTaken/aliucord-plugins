@@ -12,6 +12,8 @@ import com.discord.stores.StoreRtcConnection
 import com.discord.utilities.streams.StreamContext
 import com.discord.utilities.time.ClockFactory
 import com.discord.utilities.voice.VoiceViewUtils
+import com.discord.widgets.status.WidgetGlobalStatusIndicator
+import com.discord.widgets.status.WidgetGlobalStatusIndicatorViewModel
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
@@ -41,16 +43,21 @@ class CallTime : Plugin() {
     private fun PatcherAPI.patchConnectedText() {
         val currentVoiceStateField = StoreRtcConnection::class.java.getDeclaredField("currentVoiceState").apply { isAccessible = true }
         val onVoiceStateUpdateMethod = StoreRtcConnection::class.java.getDeclaredMethod("onVoiceStateUpdated").apply { isAccessible = true }
+        val setupIndicatorStatusMethod = WidgetGlobalStatusIndicator::class.java.getDeclaredMethod("setupIndicatorStatus", WidgetGlobalStatusIndicatorViewModel.ViewState.CallOngoing::class.java).apply { isAccessible = true }
         val clock = ClockFactory.get()
+
+        patch(setupIndicatorStatusMethod, PinePatchFn {
+            val widget = it.thisObject as WidgetGlobalStatusIndicator
+            timerTask = timer.schedule(0, 1000) {
+                setupIndicatorStatusMethod.invoke(widget, it.args[0])
+            }
+        })
 
         patch(StoreRtcConnection::class.java.getDeclaredMethod("onVoiceStateUpdated"), PinePatchFn {
             val store = it.thisObject as StoreRtcConnection
             val currentVoiceState = currentVoiceStateField[store] as OutgoingPayload.VoiceStateUpdate?
                 ?: return@PinePatchFn
             vcConnectedTime = if (currentVoiceState.channelId != null && cachedVoiceState?.channelId == null) {
-                timerTask = timer.schedule(0, 1000) {
-                    onVoiceStateUpdateMethod.invoke(store)
-                }
                 clock.currentTimeMillis()
             } else {
                 timerTask?.cancel()
