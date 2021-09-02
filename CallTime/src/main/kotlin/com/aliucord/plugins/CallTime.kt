@@ -40,7 +40,7 @@ class CallTime : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Author("Tyman", 487443883127472129L))
         description = "A plugin that shows how long you have been in a VC for."
-        version = "0.0.1"
+        version = "1.0.0"
         updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
         changelog =
             """
