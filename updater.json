@@ -11,5 +11,8 @@
     },
     "Translate": {
         "version": "1.2.1"
+    },
+    "CallTime": {
+        "version": "1.0.0"
     }
 }
