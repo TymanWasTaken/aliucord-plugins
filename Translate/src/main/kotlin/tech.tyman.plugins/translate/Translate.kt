@@ -1,4 +1,4 @@
-package com.aliucord.plugins
+package tech.tyman.plugins
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -13,15 +13,12 @@ import androidx.core.widget.NestedScrollView
 import com.aliucord.CollectionUtils
 import com.aliucord.Http
 import com.aliucord.Utils
+import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.CommandsAPI
 import com.aliucord.entities.Plugin
 import com.aliucord.patcher.PinePatchFn
-import com.aliucord.plugins.translate.PluginSettings
-import com.aliucord.plugins.translate.TranslateData
-import com.aliucord.plugins.translate.languageCodeChoices
-import com.aliucord.plugins.translate.languageCodes
+import tech.tyman.plugins.translate.*
 import com.discord.api.commands.ApplicationCommandType
-import com.discord.api.commands.CommandChoice
 import com.discord.databinding.WidgetChatListActionsBinding
 import com.discord.models.commands.ApplicationCommandOption
 import com.discord.utilities.textprocessing.node.EditedMessageNode
@@ -37,38 +34,15 @@ import top.canyie.pine.Pine.CallFrame
 import java.lang.reflect.Field
 import java.util.regex.Pattern
 
+@AliucordPlugin
 class Translate : Plugin() {
     lateinit var pluginIcon: Drawable
-    private val translatedMessages = mutableMapOf<Long, TranslateData>()
+    private val translatedMessages = mutableMapOf<Long, TranslateSuccessData>()
     private var chatList: WidgetChatList? = null
     private val messageLoggerEditedRegex = Pattern.compile("(?:.+ \\(.+: .+\\)\\n)+(.+)\$")
 
     init {
         settingsTab = SettingsTab(PluginSettings::class.java).withArgs(settings)
-    }
-
-    override fun getManifest() = Manifest().apply {
-        authors = arrayOf(Manifest.Author("Tyman", 487443883127472129L))
-        description = "Adds an option to translate messages."
-        version = "1.2.1"
-        updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
-        changelog =
-                """
-                    # Version 1.0.0
-                    * Initial release
-                    # Version 1.1.0
-                    * Add /translate to translate text from one language to another, and send it in chat by default.
-                    # Version 1.1.1
-                    * Added settings to modify the default translation language
-                    # Version 1.1.2
-                    * Fixed message links not having /channels/
-                    * Moved classes to com.aliucord.plugins.translate
-                    # Version 1.2.0
-                    * Edits the message with the translated text instead of creating a new local message
-                    # Version 1.2.1
-                    * Improved/added language code validation
-                    * Added a list of language codes to plugin settings
-                """.trimIndent()
     }
 
     override fun load(ctx: Context) {
@@ -88,19 +62,29 @@ class Translate : Plugin() {
                         ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether or not to send the message in chat (default true)", null, false, true, null, null)
                 )
         ) { ctx ->
+            val translateData = translateMessage(
+                ctx.getRequiredString("text"),
+                ctx.getString("from"),
+                ctx.getString("to")
+            )
+            if (translateData !is TranslateSuccessData) {
+                with(translateData as TranslateErrorData) {
+                    return@registerCommand CommandsAPI.CommandResult(
+                        "$errorText ($errorCode)",
+                        null,
+                        false
+                    )
+                }
+            }
             return@registerCommand CommandsAPI.CommandResult(
-                    translateMessage(
-                            ctx.getRequiredString("text"),
-                            ctx.getString("from"),
-                            ctx.getString("to")
-                    ).translatedText,
-                    null,
-                    ctx.getBoolOrDefault("send", true)
+                translateData.translatedText,
+                null,
+                ctx.getBoolOrDefault("send", true)
             )
         }
     }
 
-    private fun DraweeSpanStringBuilder.setTranslated(translateData: TranslateData, context: Context) {
+    private fun DraweeSpanStringBuilder.setTranslated(translateData: TranslateSuccessData, context: Context) {
         val contentStartIndex = messageLoggerEditedRegex.matcher(this.toString()).let {
             if (it.find()) {
                 it.start(1)
@@ -148,10 +132,16 @@ class Translate : Plugin() {
             val menu = it.thisObject as WidgetChatListActions
             val binding = getBinding.invoke(menu) as WidgetChatListActionsBinding
             val translateButton = binding.a.findViewById<TextView>(viewId)
-            translateButton.setOnClickListener { _ ->
+            translateButton.setOnClickListener { e ->
                 val message = (it.args[0] as WidgetChatListActions.Model).message
                 Utils.threadPool.execute {
                     val response = translateMessage(message.content)
+                    if (response !is TranslateSuccessData) {
+                        with (response as TranslateErrorData) {
+                            Utils.showToast(e.context, "$errorText ($errorCode)", true)
+                            return@execute
+                        }
+                    }
                     translatedMessages[message.id] = response
                     if (chatList != null) {
                         val adapter = WidgetChatList.`access$getAdapter$p`(chatList)
@@ -190,15 +180,26 @@ class Translate : Plugin() {
             append("dt", "t")
             append("q", text)
         }
-        val translatedJson = Http.Request(queryBuilder.toString(), "GET").apply {
+        val translatedJsonReq = Http.Request(queryBuilder.toString(), "GET").apply {
             setHeader("Content-Type", "application/json")
             setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4592.0 Safari/537.36")
-        }
-                .execute()
-                .text()
-        val parsedJson = JSONArray(translatedJson)
+        }.execute()
 
-        return TranslateData(
+        if (!translatedJsonReq.ok()) {
+            return when (translatedJsonReq.statusCode) {
+                429 -> TranslateErrorData(
+                    errorCode = 429,
+                    errorText = "Translate API ratelimit reached. Please try again later."
+                )
+                else -> TranslateErrorData(
+                    errorCode = translatedJsonReq.statusCode,
+                    errorText = "An unknown error occurred. Please report this to the developer of Translate."
+                )
+            }
+        }
+        val parsedJson = JSONArray(translatedJsonReq.text())
+
+        return TranslateSuccessData(
                 sourceLanguage = parsedJson.getString(2),
                 translatedLanguage = toLang,
                 sourceText = text,

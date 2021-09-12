@@ -1,4 +1,4 @@
-package com.aliucord.plugins.texter
+package tech.tyman.plugins.texter
 
 import java.lang.StringBuilder
 import java.util.*

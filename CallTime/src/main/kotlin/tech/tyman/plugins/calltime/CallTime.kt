@@ -1,7 +1,8 @@
-package com.aliucord.plugins
+package tech.tyman.plugins.calltime
 
 import android.content.Context
 import com.aliucord.Utils
+import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin.Manifest.Author
 import com.aliucord.patcher.PinePatchFn
 import com.aliucord.api.PatcherAPI
@@ -18,6 +19,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
 
+@AliucordPlugin
 class CallTime : Plugin() {
     private var vcConnectedTime: Long? = null
     private var cachedVoiceState: OutgoingPayload.VoiceStateUpdate? = null
@@ -36,18 +38,6 @@ class CallTime : Plugin() {
             val seconds = String.format("%02d", secondsNumber)
             return "$hours:$minutes:$seconds"
         }
-
-    override fun getManifest() = Manifest().apply {
-        authors = arrayOf(Author("Tyman", 487443883127472129L))
-        description = "A plugin that shows how long you have been in a VC for."
-        version = "1.0.0"
-        updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
-        changelog =
-            """
-                    # Version 1.0.0
-                    - Initial release
-                """.trimIndent()
-    }
 
     override fun start(ctx: Context) {
         patcher.patchConnectedText(ctx)

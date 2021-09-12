@@ -1,4 +1,4 @@
-package com.aliucord.plugins.translate
+package tech.tyman.plugins.translate
 
 import android.text.Editable
 import android.text.util.Linkify

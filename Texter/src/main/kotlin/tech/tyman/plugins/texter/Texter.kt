@@ -1,31 +1,15 @@
-package com.aliucord.plugins
+package tech.tyman.plugins.texter
 
 import android.content.Context
+import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.CommandsAPI
 import com.aliucord.entities.CommandContext
 import com.aliucord.entities.Plugin
-import com.aliucord.plugins.texter.*
 import com.discord.api.commands.ApplicationCommandType
 import com.discord.models.commands.ApplicationCommandOption
 
+@AliucordPlugin
 class Texter : Plugin() {
-    override fun getManifest() = Manifest().apply {
-        authors = arrayOf(Manifest.Author("Tyman", 487443883127472129L))
-        description = "A plugin to modify text formatting inspired by plugins like BetterFormattingRedux (for BetterDiscord) and texter (for Powercord)"
-        version = "1.0.2"
-        updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
-        changelog =
-                """
-                    # Version 1.0.0
-                    - Initial release
-                    # Version 1.0.1
-                    - Refactored code
-                    - Resolve older android compatibility issues
-                    # Version 1.0.2
-                    - Converted code to use kotlin
-                """.trimIndent()
-    }
-
     override fun start(context: Context) {
         registerConverterCommand(
                 "small",

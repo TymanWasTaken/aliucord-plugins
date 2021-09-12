@@ -36,7 +36,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
-          ./gradlew make
+          ./gradlew make generateUpdaterJson
 
       - name: Push builds
         if: github.event_name == 'push'

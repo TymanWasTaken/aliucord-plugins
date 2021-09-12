@@ -1,35 +1,17 @@
-package com.aliucord.plugins
+package tech.tyman.plugins.plugins
 
 import android.content.Context
 import com.aliucord.entities.Plugin.Manifest.Author
 import com.aliucord.patcher.PinePatchFn
 import androidx.core.graphics.ColorUtils
+import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
 import com.discord.models.member.GuildMember
 import com.discord.stores.StoreStream
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage
 
+@AliucordPlugin
 class ShowNames : Plugin() {
-    override fun getManifest() = Manifest().apply {
-        authors = arrayOf(Author("Tyman", 487443883127472129L))
-        description = "A plugin that changes the color of usernames to stop them from blending into the background."
-        version = "1.0.4"
-        updateUrl = "https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json"
-        changelog =
-                """
-                    # Version 1.0.0
-                    - Initial release
-                    # Version 1.0.1
-                    - Fixed changing color when on amoled mode and user has no role color
-                    # Version 1.0.2
-                    - Fixed crashing on outdated aliucord
-                    # Version 1.0.3
-                    - Converted code to use kotlin
-                    # Version 1.0.4
-                    - Fixed errors while hooking
-                """.trimIndent()
-    }
-
     override fun start(context: Context) {
         patcher.patch(WidgetChatListAdapterItemMessage::class.java.getDeclaredMethod("getAuthorTextColor", GuildMember::class.java), PinePatchFn {
             val member = it.args[0] as GuildMember? ?: return@PinePatchFn

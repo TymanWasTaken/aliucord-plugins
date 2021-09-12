@@ -8,7 +8,7 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.0.1")
-        classpath("com.github.Aliucord:gradle:main-SNAPSHOT")
+        classpath("com.github.Aliucord:gradle:affe2835a07a8bf6c3ef953204253c0fd505c681")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
     }
 }
@@ -21,12 +21,21 @@ allprojects {
     }
 }
 
-fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByName<BaseExtension>("android").configuration()
+fun Project.aliucord(configuration: com.aliucord.gradle.AliucordExtension.() -> Unit) =
+    extensions.getByName<com.aliucord.gradle.AliucordExtension>("aliucord").configuration()
+fun Project.android(configuration: BaseExtension.() -> Unit) =
+    extensions.getByName<BaseExtension>("android").configuration()
 
 subprojects {
     apply(plugin = "com.android.library")
     apply(plugin = "com.aliucord.gradle")
     apply(plugin = "kotlin-android")
+
+    aliucord {
+        author("Tyman", 487443883127472129L)
+        updateUrl.set("https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json")
+        buildUrl.set("https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/%s.zip")
+    }
 
     android {
         compileSdkVersion(30)

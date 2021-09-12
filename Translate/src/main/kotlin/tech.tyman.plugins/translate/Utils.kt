@@ -1,13 +1,20 @@
-package com.aliucord.plugins.translate
+package tech.tyman.plugins.translate
 
 import com.discord.api.commands.CommandChoice
 
-data class TranslateData(
-        val sourceLanguage: String,
-        val translatedLanguage: String,
-        val sourceText: String,
-        val translatedText: String
-)
+open class TranslateData
+
+data class TranslateSuccessData(
+    val sourceLanguage: String,
+    val translatedLanguage: String,
+    val sourceText: String,
+    val translatedText: String
+) : TranslateData()
+
+data class TranslateErrorData(
+    val errorCode: Number,
+    val errorText: String
+) : TranslateData()
 
 val languageCodes = mapOf(
     "Afrikaans" to "af",
