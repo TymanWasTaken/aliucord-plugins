@@ -2,11 +2,11 @@ name: Build
 
 on:
   push:
-    branches:
-      - main
+    branches-ignore:
+      - builds
   pull_request:
-    branches:
-      - main
+    branches-ignore:
+      - builds
 
 jobs:
   build:
@@ -18,7 +18,7 @@ jobs:
           path: "src"
 
       - name: Checkout builds
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/checkout@master
         with:
           ref: "builds"
@@ -37,9 +37,14 @@ jobs:
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
           ./gradlew make generateUpdaterJson
+      
+      - name: Upload builds as artifacts
+        with:
+          name: plugins
+          path: src/**/build/*.zip
 
       - name: Push builds
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           cd $GITHUB_WORKSPACE/builds
           cp $GITHUB_WORKSPACE/src/**/build/*.zip .
