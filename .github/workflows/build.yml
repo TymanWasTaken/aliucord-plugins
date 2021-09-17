@@ -37,7 +37,7 @@ jobs:
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
           ./gradlew make generateUpdaterJson
-          mkdir compiled
+          mkdir $GITHUB_WORKSPACE/compiled
           cp $GITHUB_WORKSPACE/src/**/build/*.zip $GITHUB_WORKSPACE/compiled
       
       - name: Upload plugins as artifacts
