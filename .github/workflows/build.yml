@@ -37,18 +37,20 @@ jobs:
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
           ./gradlew make generateUpdaterJson
+          mkdir compiled
+          cp $GITHUB_WORKSPACE/src/**/build/*.zip $GITHUB_WORKSPACE/compiled
       
       - name: Upload plugins as artifacts
         uses: actions/upload-artifact@v2
         with:
           name: plugins
-          path: src/**/build/*.zip
+          path: compiled
 
       - name: Push builds
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           cd $GITHUB_WORKSPACE/builds
-          cp $GITHUB_WORKSPACE/src/**/build/*.zip .
+          cp $GITHUB_WORKSPACE/compiled .
           cp $GITHUB_WORKSPACE/src/updater.json .
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
