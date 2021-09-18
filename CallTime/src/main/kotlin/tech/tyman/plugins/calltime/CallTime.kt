@@ -1,9 +1,9 @@
 package tech.tyman.plugins.calltime
 
 import android.content.Context
+import com.aliucord.Logger
 import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
-import com.aliucord.entities.Plugin.Manifest.Author
 import com.aliucord.patcher.PinePatchFn
 import com.aliucord.api.PatcherAPI
 import com.aliucord.entities.Plugin
@@ -62,13 +62,25 @@ class CallTime : Plugin() {
             val store = it.thisObject as StoreRtcConnection
             val currentVoiceState = currentVoiceStateField[store] as OutgoingPayload.VoiceStateUpdate?
                 ?: return@PinePatchFn
-            vcConnectedTime = if (currentVoiceState.channelId != null && cachedVoiceState?.channelId != currentVoiceState.channelId) {
-                clock.currentTimeMillis()
-            } else {
+            Logger().warn("""
+                cache
+                    channel: ${cachedVoiceState?.channelId}
+                    guild: ${cachedVoiceState?.guildId}
+                    mute: ${cachedVoiceState?.selfMute}
+                    deaf: ${cachedVoiceState?.selfMute}
+                current
+                    channel: ${currentVoiceState.channelId}
+                    guild: ${currentVoiceState.guildId}
+                    mute: ${currentVoiceState.selfMute}
+                    deaf: ${currentVoiceState.selfMute}
+            """)
+            if (currentVoiceState.channelId != null && cachedVoiceState?.channelId != currentVoiceState.channelId) {
+                vcConnectedTime = clock.currentTimeMillis()
+            } else if (currentVoiceState.channelId == null && cachedVoiceState?.channelId != null) {
                 timerTask?.cancel()
                 timerTask = null
                 if (vcConnectedTime != null) Utils.showToast(ctx, "Call ended. Elapsed time: $elapsedTime", true)
-                null
+                vcConnectedTime = null
             }
             cachedVoiceState = currentVoiceState
         })
