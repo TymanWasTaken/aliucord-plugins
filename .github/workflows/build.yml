@@ -51,7 +51,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/builds
           cp $GITHUB_WORKSPACE/compiled/* .
-          cp $GITHUB_WORKSPACE/src/updater.json .
+          cp $GITHUB_WORKSPACE/src/build/updater.json .
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add .
