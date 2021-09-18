@@ -24,6 +24,15 @@ jobs:
           ref: "builds"
           path: "builds"
 
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Setup JDK 11
         uses: actions/setup-java@v1
         with:
@@ -36,7 +45,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
-          ./gradlew make generateUpdaterJson
+          ./gradlew make generateUpdaterJson --no-daemon
           mkdir $GITHUB_WORKSPACE/compiled
           cp $GITHUB_WORKSPACE/src/**/build/*.zip $GITHUB_WORKSPACE/compiled
       
