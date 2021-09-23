@@ -1,7 +1,6 @@
 package tech.tyman.plugins.calltime
 
 import android.content.Context
-import com.aliucord.Logger
 import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.patcher.PinePatchFn
@@ -53,6 +52,7 @@ class CallTime : Plugin() {
             timerTask?.cancel()
             timerTask = timer.schedule(1000) {
                 widget.activity?.runOnUiThread {
+                    widget.view ?: return@runOnUiThread
                     setupIndicatorStatusMethod.invoke(widget, it.args[0])
                 }
             }
@@ -62,18 +62,6 @@ class CallTime : Plugin() {
             val store = it.thisObject as StoreRtcConnection
             val currentVoiceState = currentVoiceStateField[store] as OutgoingPayload.VoiceStateUpdate?
                 ?: return@PinePatchFn
-            Logger().warn("""
-                cache
-                    channel: ${cachedVoiceState?.channelId}
-                    guild: ${cachedVoiceState?.guildId}
-                    mute: ${cachedVoiceState?.selfMute}
-                    deaf: ${cachedVoiceState?.selfMute}
-                current
-                    channel: ${currentVoiceState.channelId}
-                    guild: ${currentVoiceState.guildId}
-                    mute: ${currentVoiceState.selfMute}
-                    deaf: ${currentVoiceState.selfMute}
-            """)
             if (currentVoiceState.channelId != null && cachedVoiceState?.channelId != currentVoiceState.channelId) {
                 vcConnectedTime = clock.currentTimeMillis()
             } else if (currentVoiceState.channelId == null && cachedVoiceState?.channelId != null) {
