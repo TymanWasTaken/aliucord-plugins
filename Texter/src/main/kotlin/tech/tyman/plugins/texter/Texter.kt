@@ -65,7 +65,7 @@ class Texter : Plugin() {
         commands.registerCommand(
                 name,
                 description, listOf(
-                ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to change", null, true, true, null, null)
+                ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to change", null, true, true, null, null, null)
         ),
                 execute
         )
@@ -74,7 +74,7 @@ class Texter : Plugin() {
         commands.registerCommand(
                 name,
                 description, listOf(
-                ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to change", null, true, true, null, null)
+                ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to change", null, true, true, null, null, null)
         ),
                 execute
         )
@@ -82,7 +82,7 @@ class Texter : Plugin() {
             commands.registerCommand(
                     alias,
                     description, listOf(
-                    ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to change", null, true, true, null, null)
+                    ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to change", null, true, true, null, null, null)
             ),
                     execute
             )

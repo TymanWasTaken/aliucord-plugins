@@ -48,6 +48,7 @@ jobs:
           ./gradlew make generateUpdaterJson --no-daemon
           mkdir $GITHUB_WORKSPACE/compiled
           cp $GITHUB_WORKSPACE/src/**/build/*.zip $GITHUB_WORKSPACE/compiled
+          cp $GITHUB_WORKSPACE/src/build/updater.json $GITHUB_WORKSPACE/compiled
       
       - name: Upload plugins as artifacts
         uses: actions/upload-artifact@v2
@@ -60,7 +61,6 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/builds
           cp $GITHUB_WORKSPACE/compiled/* .
-          cp $GITHUB_WORKSPACE/src/build/updater.json .
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add .

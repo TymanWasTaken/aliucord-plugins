@@ -56,10 +56,10 @@ class Translate : Plugin() {
                 "translate",
                 "Translates text from one language to another, sends by default",
                 listOf(
-                        ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to translate", null, true, true, null, null),
-                        ApplicationCommandOption(ApplicationCommandType.STRING, "to", "The language to translate to (default en, must be a language code described in plugin settings)", null, false, true, languageCodeChoices, null),
-                        ApplicationCommandOption(ApplicationCommandType.STRING, "from", "The language to translate from (default auto, must be a language code described in plugin settings)", null, false, true, languageCodeChoices, null),
-                        ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether or not to send the message in chat (default true)", null, false, true, null, null)
+                        ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to translate", null, true, true, null, null, null),
+                        ApplicationCommandOption(ApplicationCommandType.STRING, "to", "The language to translate to (default en, must be a language code described in plugin settings)", null, false, true, null, languageCodeChoices, null),
+                        ApplicationCommandOption(ApplicationCommandType.STRING, "from", "The language to translate from (default auto, must be a language code described in plugin settings)", null, false, true, null, languageCodeChoices, null),
+                        ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether or not to send the message in chat (default true)", null, false, true, null, null, null)
                 )
         ) { ctx ->
             val translateData = translateMessage(
