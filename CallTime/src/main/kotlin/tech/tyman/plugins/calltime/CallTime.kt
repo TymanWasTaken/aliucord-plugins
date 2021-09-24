@@ -29,13 +29,12 @@ class CallTime : Plugin() {
         get() = run {
             val vcConnectedTime = vcConnectedTime ?: return "00:00:00"
             val duration = clock.currentTimeMillis() - vcConnectedTime
-            val hoursNumber = TimeUnit.MILLISECONDS.toHours(duration)
-            val minutesNumber = TimeUnit.MILLISECONDS.toMinutes(duration) - hoursNumber * 60
-            val secondsNumber = TimeUnit.MILLISECONDS.toSeconds(duration) - minutesNumber * 60
-            val hours = String.format("%02d", hoursNumber)
-            val minutes = String.format("%02d", minutesNumber)
-            val seconds = String.format("%02d", secondsNumber)
-            return "$hours:$minutes:$seconds"
+            return String.format(
+                    "%02d:%02d:%02d",
+                    TimeUnit.MILLISECONDS.toHours(duration),
+                    TimeUnit.MILLISECONDS.toMinutes(duration) % TimeUnit.HOURS.toMinutes(1),
+                    TimeUnit.MILLISECONDS.toSeconds(duration) % TimeUnit.MINUTES.toSeconds(1)
+            )
         }
 
     override fun start(ctx: Context) {
