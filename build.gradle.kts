@@ -8,7 +8,7 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.0.1")
-        classpath("com.github.Aliucord:gradle:affe2835a07a8bf6c3ef953204253c0fd505c681")
+        classpath("com.github.Aliucord:gradle:57d0d30aa1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
     }
 }
