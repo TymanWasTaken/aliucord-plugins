@@ -38,10 +38,10 @@ class CallTime : Plugin() {
         }
 
     override fun start(ctx: Context) {
-        patcher.patchConnectedText(ctx)
+        patcher.patchConnectedText()
     }
 
-    private fun PatcherAPI.patchConnectedText(ctx: Context) {
+    private fun PatcherAPI.patchConnectedText() {
         val currentVoiceStateField = StoreRtcConnection::class.java.getDeclaredField("currentVoiceState").apply { isAccessible = true }
         val setupIndicatorStatusMethod = WidgetGlobalStatusIndicator::class.java.getDeclaredMethod("setupIndicatorStatus", WidgetGlobalStatusIndicatorViewModel.ViewState.CallOngoing::class.java).apply { isAccessible = true }
         val getConnectedTextMethod = VoiceViewUtils::class.java.getDeclaredMethod("getConnectedText", Context::class.java, RtcConnection.State::class.java, StreamContext::class.java, Boolean::class.javaPrimitiveType)

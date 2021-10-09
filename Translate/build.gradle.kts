@@ -1,6 +1,8 @@
-version = "1.2.1"
+version = "1.2.2"
 description = "Adds an option to translate messages."
 aliucord.changelog.set("""
+    # Version 1.2.2
+    * Updated for new discord/aliucord version
     # Version 1.2.1
     * Improved/added language code validation
     * Added a list of language codes to plugin settings
