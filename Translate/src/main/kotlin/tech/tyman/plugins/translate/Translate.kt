@@ -1,4 +1,4 @@
-package tech.tyman.plugins
+package tech.tyman.plugins.translate
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -16,11 +16,9 @@ import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.CommandsAPI
 import com.aliucord.entities.Plugin
-import com.aliucord.patcher.PinePatchFn
-import tech.tyman.plugins.translate.*
+import com.aliucord.patcher.Hook
 import com.discord.api.commands.ApplicationCommandType
 import com.discord.databinding.WidgetChatListActionsBinding
-import com.discord.models.commands.ApplicationCommandOption
 import com.discord.utilities.textprocessing.node.EditedMessageNode
 import com.discord.utilities.view.text.SimpleDraweeSpanTextView
 import com.discord.widgets.chat.list.WidgetChatList
@@ -30,7 +28,6 @@ import com.discord.widgets.chat.list.entries.MessageEntry
 import com.facebook.drawee.span.DraweeSpanStringBuilder
 import com.lytefast.flexinput.R
 import org.json.JSONArray
-import top.canyie.pine.Pine.CallFrame
 import java.lang.reflect.Field
 import java.util.regex.Pattern
 
@@ -50,16 +47,16 @@ class Translate : Plugin() {
     }
 
     override fun start(context: Context) {
-        patchMessageContextMenu(context)
+        patchMessageContextMenu()
         patchProcessMessageText()
         commands.registerCommand(
                 "translate",
                 "Translates text from one language to another, sends by default",
                 listOf(
-                        ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to translate", null, true, true, null, null),
-                        ApplicationCommandOption(ApplicationCommandType.STRING, "to", "The language to translate to (default en, must be a language code described in plugin settings)", null, false, true, languageCodeChoices, null),
-                        ApplicationCommandOption(ApplicationCommandType.STRING, "from", "The language to translate from (default auto, must be a language code described in plugin settings)", null, false, true, languageCodeChoices, null),
-                        ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether or not to send the message in chat (default true)", null, false, true, null, null)
+                        Utils.createCommandOption(ApplicationCommandType.STRING, "text", "The text to translate"),
+                        Utils.createCommandOption(ApplicationCommandType.STRING, "to", "The language to translate to (default en, must be a language code described in plugin settings)", choices = languageCodeChoices),
+                        Utils.createCommandOption(ApplicationCommandType.STRING, "from", "The language to translate from (default auto, must be a language code described in plugin settings)", choices = languageCodeChoices),
+                        Utils.createCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether or not to send the message in chat (default true)")
                 )
         ) { ctx ->
             val translateData = translateMessage(
@@ -101,44 +98,46 @@ class Translate : Plugin() {
     }
 
     private fun patchProcessMessageText() {
-        patcher.patch(WidgetChatList::class.java.getDeclaredConstructor(), PinePatchFn { callFrame: CallFrame -> chatList = callFrame.thisObject as WidgetChatList })
+        patcher.patch(WidgetChatList::class.java.getDeclaredConstructor(), Hook {
+            chatList = it.thisObject as WidgetChatList
+        })
 
         val mDraweeStringBuilder: Field = SimpleDraweeSpanTextView::class.java.getDeclaredField("mDraweeStringBuilder")
         mDraweeStringBuilder.isAccessible = true
-        patcher.patch(WidgetChatListAdapterItemMessage::class.java, "processMessageText", arrayOf(SimpleDraweeSpanTextView::class.java, MessageEntry::class.java), PinePatchFn { callFrame: CallFrame ->
-            val messageEntry = callFrame.args[1] as MessageEntry
-            val message = messageEntry.message ?: return@PinePatchFn
+        patcher.patch(WidgetChatListAdapterItemMessage::class.java, "processMessageText", arrayOf(SimpleDraweeSpanTextView::class.java, MessageEntry::class.java), Hook {
+            val messageEntry = it.args[1] as MessageEntry
+            val message = messageEntry.message ?: return@Hook
             val id = message.id
-            val translateData = translatedMessages[id] ?: return@PinePatchFn
+            val translateData = translatedMessages[id] ?: return@Hook
             if (translateData.sourceText != message.content) {
                 translatedMessages.remove(id)
-                return@PinePatchFn
+                return@Hook
             }
-            val textView = callFrame.args[0] as SimpleDraweeSpanTextView
+            val textView = it.args[0] as SimpleDraweeSpanTextView
             val builder = mDraweeStringBuilder[textView] as DraweeSpanStringBuilder?
-                    ?: return@PinePatchFn
+                    ?: return@Hook
             val context = textView.context
             builder.setTranslated(translateData, context)
             textView.setDraweeSpanStringBuilder(builder)
         })
     }
 
-    private fun patchMessageContextMenu(ctx: Context) {
+    private fun patchMessageContextMenu() {
         val viewId = View.generateViewId()
         val messageContextMenu = WidgetChatListActions::class.java
         val getBinding = messageContextMenu.getDeclaredMethod("getBinding").apply { isAccessible = true }
 
-        patcher.patch(messageContextMenu.getDeclaredMethod("configureUI", WidgetChatListActions.Model::class.java), PinePatchFn {
+        patcher.patch(messageContextMenu.getDeclaredMethod("configureUI", WidgetChatListActions.Model::class.java), Hook {
             val menu = it.thisObject as WidgetChatListActions
             val binding = getBinding.invoke(menu) as WidgetChatListActionsBinding
             val translateButton = binding.a.findViewById<TextView>(viewId)
-            translateButton.setOnClickListener { e ->
+            translateButton.setOnClickListener { _ ->
                 val message = (it.args[0] as WidgetChatListActions.Model).message
                 Utils.threadPool.execute {
                     val response = translateMessage(message.content)
                     if (response !is TranslateSuccessData) {
                         with (response as TranslateErrorData) {
-                            Utils.showToast(e.context, "$errorText ($errorCode)", true)
+                            Utils.showToast("$errorText ($errorCode)", true)
                             return@execute
                         }
                     }
@@ -151,13 +150,13 @@ class Translate : Plugin() {
                         }
                         if (i != -1) adapter.notifyItemChanged(i)
                     }
-                    Utils.showToast(ctx, "Translated message")
+                    Utils.showToast("Translated message")
                     menu.dismiss()
                 }
             }
         })
 
-        patcher.patch(messageContextMenu, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), PinePatchFn {
+        patcher.patch(messageContextMenu, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), Hook {
             val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
             val context = linearLayout.context
             linearLayout.addView(TextView(context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {

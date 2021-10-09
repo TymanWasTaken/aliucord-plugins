@@ -26,7 +26,7 @@ class PluginSettings(private val settings: SettingsAPI) : SettingsPage() {
         button.text = "Save"
         button.setOnClickListener {
             settings.setString("defaultLanguage", editText.text.toString())
-            Utils.showToast(ctx, "Saved translate settings!")
+            Utils.showToast("Saved translate settings!")
             close()
         }
         editText.maxLines = 1

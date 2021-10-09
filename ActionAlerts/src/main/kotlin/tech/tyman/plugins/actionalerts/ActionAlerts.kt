@@ -1,11 +1,11 @@
-package tech.tyman.plugins
+package tech.tyman.plugins.actionalerts
 
 import android.content.Context
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.NotificationsAPI
 import com.aliucord.entities.NotificationData
 import com.aliucord.entities.Plugin
-import com.aliucord.utils.RxUtils.getResultBlocking
+import com.aliucord.utils.RxUtils.await
 import com.aliucord.utils.RxUtils.subscribe
 import com.discord.models.user.CoreUser
 import com.discord.stores.StoreStream
@@ -22,7 +22,7 @@ class ActionAlerts : Plugin() {
                     !this.containsKey(it)
                 } ?: return@subscribe
                 val user = StoreStream.getUsers().users[removed] ?: CoreUser(
-                    RestAPI.getApi().userGet(removed).getResultBlocking().first ?: return@subscribe
+                    RestAPI.getApi().userGet(removed).await().first ?: return@subscribe
                 )
                 NotificationsAPI.display(
                     NotificationData().apply {

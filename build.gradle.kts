@@ -8,7 +8,7 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.0.1")
-        classpath("com.github.Aliucord:gradle:57d0d30aa1")
+        classpath("com.github.Aliucord:gradle:${project.properties["aliucord.gradleVersion"]}")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
     }
 }
@@ -35,6 +35,7 @@ subprojects {
         author("Tyman", 487443883127472129L)
         updateUrl.set("https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json")
         buildUrl.set("https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/%s.zip")
+        minimumDiscordVersion.set((project.properties["aliucord.minimumDiscordVersion"] as String).toInt())
     }
 
     android {
@@ -65,8 +66,8 @@ subprojects {
         val discord by configurations
         val implementation by configurations
 
-        discord("com.discord:discord:aliucord-SNAPSHOT")
-        implementation("com.github.Aliucord:Aliucord:main-SNAPSHOT")
+        discord("com.discord:discord:${project.properties["aliucord.discordVersion"]}")
+        implementation("com.github.Aliucord:Aliucord:dev-SNAPSHOT")
 
         implementation("androidx.appcompat:appcompat:1.3.1")
         implementation("com.google.android.material:material:1.4.0")
