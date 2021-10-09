@@ -1,12 +1,12 @@
 package tech.tyman.plugins.texter
 
 import android.content.Context
+import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.CommandsAPI
 import com.aliucord.entities.CommandContext
 import com.aliucord.entities.Plugin
 import com.discord.api.commands.ApplicationCommandType
-import com.discord.models.commands.ApplicationCommandOption
 
 @AliucordPlugin
 class Texter : Plugin() {
@@ -65,7 +65,7 @@ class Texter : Plugin() {
         commands.registerCommand(
                 name,
                 description, listOf(
-                ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to change", null, true, true, null, null, null)
+                Utils.createCommandOption(ApplicationCommandType.STRING, "text", "The text to change")
         ),
                 execute
         )
@@ -74,7 +74,7 @@ class Texter : Plugin() {
         commands.registerCommand(
                 name,
                 description, listOf(
-                ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to change", null, true, true, null, null, null)
+                Utils.createCommandOption(ApplicationCommandType.STRING, "text", "The text to change")
         ),
                 execute
         )
@@ -82,7 +82,7 @@ class Texter : Plugin() {
             commands.registerCommand(
                     alias,
                     description, listOf(
-                    ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to change", null, true, true, null, null, null)
+                    Utils.createCommandOption(ApplicationCommandType.STRING, "text", "The text to change")
             ),
                     execute
             )

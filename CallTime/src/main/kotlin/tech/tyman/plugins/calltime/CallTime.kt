@@ -3,9 +3,9 @@ package tech.tyman.plugins.calltime
 import android.content.Context
 import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
-import com.aliucord.patcher.PinePatchFn
 import com.aliucord.api.PatcherAPI
 import com.aliucord.entities.Plugin
+import com.aliucord.patcher.Hook
 import com.discord.gateway.io.OutgoingPayload
 import com.discord.rtcconnection.RtcConnection
 import com.discord.stores.StoreRtcConnection
@@ -46,7 +46,7 @@ class CallTime : Plugin() {
         val setupIndicatorStatusMethod = WidgetGlobalStatusIndicator::class.java.getDeclaredMethod("setupIndicatorStatus", WidgetGlobalStatusIndicatorViewModel.ViewState.CallOngoing::class.java).apply { isAccessible = true }
         val getConnectedTextMethod = VoiceViewUtils::class.java.getDeclaredMethod("getConnectedText", Context::class.java, RtcConnection.State::class.java, StreamContext::class.java, Boolean::class.javaPrimitiveType)
 
-        patch(setupIndicatorStatusMethod, PinePatchFn {
+        patch(setupIndicatorStatusMethod, Hook {
             val widget = it.thisObject as WidgetGlobalStatusIndicator
             timerTask?.cancel()
             timerTask = timer.schedule(1000) {
@@ -57,21 +57,21 @@ class CallTime : Plugin() {
             }
         })
 
-        patch(StoreRtcConnection::class.java.getDeclaredMethod("onVoiceStateUpdated"), PinePatchFn {
+        patch(StoreRtcConnection::class.java.getDeclaredMethod("onVoiceStateUpdated"), Hook {
             val store = it.thisObject as StoreRtcConnection
             val currentVoiceState = currentVoiceStateField[store] as OutgoingPayload.VoiceStateUpdate?
-                ?: return@PinePatchFn
+                ?: return@Hook
             if (currentVoiceState.channelId != null && cachedVoiceState?.channelId != currentVoiceState.channelId) {
                 vcConnectedTime = clock.currentTimeMillis()
             } else if (currentVoiceState.channelId == null && cachedVoiceState?.channelId != null) {
                 timerTask?.cancel()
                 timerTask = null
-                if (vcConnectedTime != null) Utils.showToast(ctx, "Call ended. Elapsed time: $elapsedTime", true)
+                if (vcConnectedTime != null) Utils.showToast("Call ended. Elapsed time: $elapsedTime", true)
                 vcConnectedTime = null
             }
             cachedVoiceState = currentVoiceState
         })
-        patch(getConnectedTextMethod, PinePatchFn {
+        patch(getConnectedTextMethod, Hook {
             it.result = "${it.result} ($elapsedTime)"
         })
 
