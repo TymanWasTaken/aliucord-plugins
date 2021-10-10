@@ -1,6 +1,8 @@
-version = "1.0.5"
+version = "1.0.6"
 description = "A plugin that changes the color of usernames to stop them from blending into the background."
 aliucord.changelog.set("""
+    # Version 1.0.6
+    * Remove debug logging i accidentally left in the code
     # Version 1.0.5
     * Updated for new discord/aliucord version
     # Version 1.0.4
