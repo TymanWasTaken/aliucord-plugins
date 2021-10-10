@@ -31,11 +31,6 @@ class ShowNames : Plugin() {
                 else -> return@Hook
             }
             val bgHsl = colorToHsl(bg)
-            Logger("aaaaaaaaaaa").warn("""
-                Name: $color
-                Bg: $bg
-                Diff: ${abs(nameHsl[2] - bgHsl[2])}
-            """)
             if (abs(nameHsl[2] - bgHsl[2]) >= 0.01) return@Hook
             it.result = ColorUtils.HSLToColor(
                 if (nameHsl[2] > 0.5) nameHsl.apply { this[2] =- 0.05f }
