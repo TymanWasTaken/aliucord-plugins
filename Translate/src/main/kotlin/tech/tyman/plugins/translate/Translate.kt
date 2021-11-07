@@ -43,7 +43,7 @@ class Translate : Plugin() {
     }
 
     override fun load(ctx: Context) {
-        pluginIcon = ContextCompat.getDrawable(ctx, R.d.ic_locale_24dp)!!
+        pluginIcon = ContextCompat.getDrawable(ctx, R.e.ic_locale_24dp)!!
     }
 
     override fun start(context: Context) {
@@ -159,7 +159,7 @@ class Translate : Plugin() {
         patcher.patch(messageContextMenu, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), Hook {
             val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
             val context = linearLayout.context
-            linearLayout.addView(TextView(context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
+            linearLayout.addView(TextView(context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
                 id = viewId
                 text = "Translate message"
                 setCompoundDrawablesRelativeWithIntrinsicBounds(pluginIcon, null, null, null)
