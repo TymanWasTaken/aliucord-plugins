@@ -19,9 +19,8 @@ class PluginSettings(private val settings: SettingsAPI) : SettingsPage() {
         super.onViewBound(view)
         setActionBarTitle("Translate")
         val ctx = requireContext()
-        val input = TextInput(ctx)
-        input.hint = "Language to translate messages to by default"
-        val editText = input.editText!!
+        val input = TextInput(ctx, "Language to translate messages to by default")
+        val editText = input.editText
         val button = Button(ctx)
         button.text = "Save"
         button.setOnClickListener {
