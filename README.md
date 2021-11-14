@@ -35,3 +35,7 @@ Adds a message context menu action to translate the message to english (configur
 ### [CallTime](https://github.com/TymanWasTaken/aliucord-plugins/raw/builds/CallTime.zip)
 
 A plugin that shows the time you have been in a VC for
+
+### [ReverseImageSearch](https://github.com/TymanWasTaken/aliucord-plugins/raw/builds/ReverseImageSearch.zip)
+
+Allows you to revere image search by long pressing the "open in browser" button on images.

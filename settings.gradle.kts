@@ -1,7 +1,8 @@
-include(":Texter")
-include(":ShowNames")
-include(":Translate")
-include(":CallTime")
 include(":ActionAlerts")
+include(":CallTime")
+include(":ReverseImageSearch")
+include(":ShowNames")
+include(":Texter")
+include(":Translate")
 
 rootProject.name = "AliucordPlugins"
