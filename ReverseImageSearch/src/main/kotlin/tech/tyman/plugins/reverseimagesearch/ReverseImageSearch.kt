@@ -11,6 +11,7 @@ import android.net.Uri
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
+import com.aliucord.Logger
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -32,9 +33,6 @@ class ReverseImageSearch : Plugin() {
     }
 
     override fun start(context: Context) {
-        val imageUriField = WidgetMedia::class.java.getDeclaredField("imageUri").apply {
-            isAccessible = true
-        }
         val isVideoMethod = WidgetMedia::class.java.getDeclaredMethod("isVideo").apply {
             isAccessible = true
         }
@@ -43,9 +41,9 @@ class ReverseImageSearch : Plugin() {
             val btnId = Utils.getResId("menu_media_browser", "id")
             val btn = Utils.appActivity.findViewById<ActionMenuItemView>(btnId)
             btn.setOnLongClickListener {
-                val url = imageUriField.get(this) as Uri? ?: return@setOnLongClickListener false
+                val url = mostRecentIntent.getStringExtra("INTENT_MEDIA_URL") ?: return@setOnLongClickListener false
                 if (settings.engine == Engine.ASK) {
-                    EngineSheet(url, settings)
+                    EngineSheet(url)
                         .show(Utils.appActivity.supportFragmentManager, "Reverse Image Search")
                 } else {
                     val intent = Intent(Intent.ACTION_VIEW, settings.engine.getUrl(url))
@@ -71,11 +69,15 @@ enum class Engine(val urlTemplate: String?, val niceName: String) {
     IQDB("https://iqdb.org/?url=%s", "IQDB"),
     SAUCE_NAO("https://saucenao.com/search.php?url=%s", "SauceNAO");
 
-    fun getUrl(url: Uri): Uri = Uri.parse(
-        urlTemplate?.format(
-            URLEncoder.encode(url.toString(), StandardCharsets.UTF_8.toString())
+    fun getUrl(url: String): Uri {
+        val uri = Uri.parse(
+            urlTemplate?.format(
+                URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
+            )
         )
-    )
+        Logger("aaaaa").warn(uri.toString())
+        return uri
+    }
 
     companion object {
         fun fromOrdinal(ordinal: Int): Engine? {

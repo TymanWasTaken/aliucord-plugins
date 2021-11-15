@@ -10,9 +10,10 @@ import androidx.core.content.res.ResourcesCompat
 import com.aliucord.Utils
 import com.aliucord.api.SettingsAPI
 import com.aliucord.widgets.BottomSheet
+import com.discord.widgets.media.WidgetMedia
 import com.lytefast.flexinput.R
 
-class EngineSheet(val url: Uri?, val settings: SettingsAPI) : BottomSheet() {
+class EngineSheet(val url: String?) : BottomSheet() {
     @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, bundle: Bundle?) {
         super.onViewCreated(view, bundle)
