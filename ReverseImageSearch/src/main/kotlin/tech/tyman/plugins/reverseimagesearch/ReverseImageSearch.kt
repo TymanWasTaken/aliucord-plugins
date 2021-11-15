@@ -31,7 +31,7 @@ class ReverseImageSearch : Plugin() {
             val btn = Utils.appActivity.findViewById<ActionMenuItemView>(btnId)
             btn.setOnLongClickListener {
                 val url = imageUriField.get(this) as Uri? ?: return@setOnLongClickListener false
-                if (settings.engine == Engine.ASK_EVERY_TIME) {
+                if (settings.engine == Engine.ASK) {
                     EngineSheet(url, settings)
                         .show(Utils.appActivity.supportFragmentManager, "Reverse Image Search")
                 } else {
