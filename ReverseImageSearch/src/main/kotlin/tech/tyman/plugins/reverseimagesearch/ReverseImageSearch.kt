@@ -9,13 +9,26 @@ import com.discord.widgets.media.WidgetMedia
 import com.aliucord.patcher.after
 import android.net.Uri
 import android.content.Intent
+import android.graphics.drawable.Drawable
+import androidx.core.content.res.ResourcesCompat
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 @AliucordPlugin
 class ReverseImageSearch : Plugin() {
+    lateinit var pluginIcon: Drawable
+
     init {
         settingsTab = SettingsTab(SearchSettings::class.java).withArgs(settings)
+        needsResources = true
+    }
+
+    override fun load(ctx: Context) {
+        pluginIcon = ResourcesCompat.getDrawable(
+            resources,
+            resources.getIdentifier("ic_baseline_image_search_24", "drawable", "com.aliucord.plugins"),
+            null
+        )!!
     }
 
     override fun start(context: Context) {
