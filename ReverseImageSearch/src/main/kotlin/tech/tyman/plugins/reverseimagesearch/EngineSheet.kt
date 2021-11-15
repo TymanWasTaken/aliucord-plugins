@@ -19,7 +19,7 @@ class EngineSheet(val url: Uri?, val settings: SettingsAPI) : BottomSheet() {
 
         val context = view.context
         val textViews = Engine.values().mapNotNull {
-            if (it == Engine.ASK_EVERY_TIME) return@mapNotNull null
+            if (it == Engine.ASK) return@mapNotNull null
             TextView(context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
                 val iconDrawable = ResourcesCompat
                     .getDrawable(resources, R.e.ic_open_in_browser_white_24dp, null)

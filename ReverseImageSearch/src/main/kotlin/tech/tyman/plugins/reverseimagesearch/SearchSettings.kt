@@ -13,7 +13,7 @@ import com.discord.views.RadioManager
 import com.lytefast.flexinput.R
 
 var SettingsAPI.engine: Engine
-    get() = Engine.fromOrdinal(this.getInt("engine", Engine.GOOGLE.ordinal)) ?: Engine.GOOGLE
+    get() = Engine.fromOrdinal(this.getInt("engine", Engine.ASK.ordinal)) ?: Engine.ASK
     set(value) = this.setInt("engine", value.ordinal)
 
 @SuppressLint("SetTextI18n")
