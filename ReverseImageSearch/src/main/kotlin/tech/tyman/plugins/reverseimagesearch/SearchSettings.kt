@@ -1,5 +1,6 @@
 package tech.tyman.plugins.reverseimagesearch
 
+import android.annotation.SuppressLint
 import android.view.View
 import android.widget.RadioGroup
 import android.widget.TextView
@@ -15,13 +16,14 @@ var SettingsAPI.engine: Engine
     get() = Engine.fromOrdinal(this.getInt("engine", Engine.GOOGLE.ordinal)) ?: Engine.GOOGLE
     set(value) = this.setInt("engine", value.ordinal)
 
+@SuppressLint("SetTextI18n")
 class SearchSettings(private val settings: SettingsAPI) : SettingsPage() {
     override fun onViewBound(view: View?) {
         super.onViewBound(view)
         setActionBarTitle("ReverseImageSearch")
         val ctx = requireContext()
 
-        val radios = Engine.values().map {
+        val radios = Engine.values().mapNotNull {
             Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, it.niceName, null)
         }
         val radioManager = RadioManager(radios)

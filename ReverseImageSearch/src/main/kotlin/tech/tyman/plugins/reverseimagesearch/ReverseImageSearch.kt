@@ -31,8 +31,13 @@ class ReverseImageSearch : Plugin() {
             val btn = Utils.appActivity.findViewById<ActionMenuItemView>(btnId)
             btn.setOnLongClickListener {
                 val url = imageUriField.get(this) as Uri? ?: return@setOnLongClickListener false
-                val intent = Intent(Intent.ACTION_VIEW, settings.engine.getUrl(url))
-                startActivity(intent)
+                if (settings.engine == Engine.ASK_EVERY_TIME) {
+                    EngineSheet(url, settings)
+                        .show(Utils.appActivity.supportFragmentManager, "Reverse Image Search")
+                } else {
+                    val intent = Intent(Intent.ACTION_VIEW, settings.engine.getUrl(url))
+                    startActivity(intent)
+                }
                 true
             }
         }
@@ -44,25 +49,17 @@ class ReverseImageSearch : Plugin() {
 }
 
 @Suppress("unused")
-enum class Engine(val urlTemplate: String) {
-    GOOGLE("https://www.google.com/searchbyimage?image_url=%s"),
-    TIN_EYE("https://www.tineye.com/search?url=%s"),
-    YANDEX("https://yandex.com/images/search?url=%s&rpt=imageview"),
-    BING("https://www.bing.com/images/search?q=imgurl:%s&view=detailv2&iss=sbi&FORM=IRSBIQ");
-
-    val niceName: String
-        get() {
-            val sb = StringBuilder()
-            for (oneString in this.name.lowercase().split("_").toTypedArray()) {
-                sb.append(oneString.substring(0, 1).uppercase())
-                sb.append(oneString.substring(1))
-            }
-            return sb.toString()
-        }
+enum class Engine(val urlTemplate: String?, val niceName: String) {
+    ASK_EVERY_TIME(null, "Ask every time"),
+    GOOGLE("https://www.google.com/searchbyimage?image_url=%s", "Google images"),
+    TIN_EYE("https://www.tineye.com/search?url=%s", "TinEye"),
+    YANDEX("https://yandex.com/images/search?url=%s&rpt=imageview", "Yandex"),
+    BING("https://www.bing.com/images/search?q=imgurl:%s&view=detailv2&iss=sbi&FORM=IRSBIQ", "Bing"),
+    IQDB("https://iqdb.org/?url=%s", "IQDB"),
+    SAUCE_NAO("https://saucenao.com/search.php?url=%s", "SauceNAO");
 
     fun getUrl(url: Uri): Uri = Uri.parse(
-        urlTemplate.replace(
-            "%s",
+        urlTemplate?.format(
             URLEncoder.encode(url.toString(), StandardCharsets.UTF_8.toString())
         )
     )
