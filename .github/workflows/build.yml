@@ -38,7 +38,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
-          ./gradlew $(python .github/getchanged.py)
+          ./gradlew $(python .github/getchanged.py ${{ github.sha }})
           mkdir $GITHUB_WORKSPACE/compiled
           cp $GITHUB_WORKSPACE/src/**/build/*.zip $GITHUB_WORKSPACE/compiled
           cp $GITHUB_WORKSPACE/src/build/updater.json $GITHUB_WORKSPACE/compiled
