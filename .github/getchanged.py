@@ -1,10 +1,10 @@
-import subprocess, re, sys
+import subprocess, re, sys, os
 
 global_change = re.compile(r"^(?:(?:build|settings)\.gradle(?:\.kts)?|gradle\.properties|\.github\/(?:workflows\/.+|getchanged\.py)|\.gradle\/.+)$")
 plugin_change = re.compile(r"^(.+)\/(?:src\/main\/.+|(?:build|settings)\.gradle(?:\.kts)?)$")
 
 sha = sys.argv[1]
-out = subprocess.run(["git", "diff", "--name-only", sha, f"{sha}~1"], stdout=subprocess.PIPE).stdout.strip(b'\n').decode("utf-8")
+out = subprocess.run(["git", "diff", "--name-only", sha, f"{sha}~1"], stdout=subprocess.PIPE, cwd=f"{os.environ['GITHUB_WORKSPACE']}/src").stdout.strip(b'\n').decode("utf-8")
 
 matched = ""
 found = []
