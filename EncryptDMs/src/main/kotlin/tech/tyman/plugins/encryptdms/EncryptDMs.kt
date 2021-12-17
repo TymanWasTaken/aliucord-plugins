@@ -170,109 +170,102 @@ class EncryptDMs : Plugin() {
 
     private fun PatcherAPI.patchDirectMessageChannelActions() {
         this.after<WidgetChannelsListItemChannelActions>("configureUI", WidgetChannelsListItemChannelActions.Model::class.java) {
-            try {
-                val channelId = (it.args[0] as WidgetChannelsListItemChannelActions.Model).channel.id
-                if (settings.getKey(channelId) != null) return@after // If key already generated then ignore the rest of this
-                val nestedScrollView = this.requireView() as NestedScrollView
-                val layout = nestedScrollView.getChildAt(0) as LinearLayout
-                val binding = com.discord.widgets.channels.list.WidgetChannelsListItemChannelActions::class.java.getDeclaredMethod("getBinding")
-                        .apply { isAccessible = true }
-                        .invoke(this) as WidgetChannelsListItemActionsBinding
-                val view = binding.j
-                val param = view.layoutParams
-                val params = LinearLayout.LayoutParams(param.width, param.height)
-                params.leftMargin = DimenUtils.dpToPx(20)
-                val tw = TextView(view.context, null, 0, R.i.UiKit_Settings_Item_Icon)
-                tw.text = "Setup encrypted DMs (EncryptDMs)"
-                tw.setCompoundDrawablesRelativeWithIntrinsicBounds(ContextCompat.getDrawable(view.context, R.e.avd_show_password), null, null, null)
-                tw.layoutParams = view.layoutParams
-                tw.id = View.generateViewId()
-                tw.setOnClickListener {
-                    val key = genAesKey().asHex()
-                    settings.setKey(channelId, key)
-                    Utils.showToast("Key saved for channel. To send this key to the other user, tell the other user to run the /sendpubkey command, press and hold their message, and then run the /sendkey command.", true)
-                    this.dismiss()
-                }
-                layout.addView(tw)
-            } catch (e: Exception) {
-                logger.error(e) // Patcher extension error catching errors itself lmaoS
+            val channelId = (it.args[0] as WidgetChannelsListItemChannelActions.Model).channel.id
+            if (settings.getKey(channelId) != null) return@after // If key already generated then ignore the rest of this
+            val nestedScrollView = this.requireView() as NestedScrollView
+            val layout = nestedScrollView.getChildAt(0) as LinearLayout
+            val binding = com.discord.widgets.channels.list.WidgetChannelsListItemChannelActions::class.java.getDeclaredMethod("getBinding")
+                    .apply { isAccessible = true }
+                    .invoke(this) as WidgetChannelsListItemActionsBinding
+            val view = binding.j
+            val param = view.layoutParams
+            val params = LinearLayout.LayoutParams(param.width, param.height)
+            params.leftMargin = DimenUtils.dpToPx(20)
+            val tw = TextView(view.context, null, 0, R.i.UiKit_Settings_Item_Icon)
+            tw.text = "Setup encrypted DMs (EncryptDMs)"
+            tw.setCompoundDrawablesRelativeWithIntrinsicBounds(ContextCompat.getDrawable(view.context, R.e.avd_show_password), null, null, null)
+            tw.layoutParams = view.layoutParams
+            tw.id = View.generateViewId()
+            tw.setOnClickListener {
+                val key = genAesKey().asHex()
+                settings.setKey(channelId, key)
+                Utils.showToast("Key saved for channel. To send this key to the other user, tell the other user to run the /sendpubkey command, press and hold their message, and then run the /sendkey command.", true)
+                this.dismiss()
             }
+            layout.addView(tw)
         }
     }
 
     private fun PatcherAPI.patchMessageActions() {
         this.after<WidgetChatListActions>("configureUI", WidgetChatListActions.Model::class.java) {
-            try {
-                val message = (it.args[0] as WidgetChatListActions.Model).message
-                val userId = CoreUser(message.author).id
-                val content = message.content
-                if (
-                        !listOf(
-                                "<enc:publickeys>",
-                                "<enc:aeskey>"
-                        ).contains(content)
-                ) return@after // If message is not relevant ignore it
-                val nestedScrollView = this.requireView() as NestedScrollView
-                val layout = nestedScrollView.getChildAt(0) as LinearLayout
-                val binding = WidgetChatListActions::class.java.getDeclaredMethod("getBinding")
-                        .apply { isAccessible = true }
-                        .invoke(this) as WidgetChatListActionsBinding
-                val view = binding.j
-                val param = view.layoutParams
-                val params = LinearLayout.LayoutParams(param.width, param.height)
-                params.leftMargin = DimenUtils.dpToPx(20)
-                val tw = TextView(view.context, null, 0, R.i.UiKit_Settings_Item_Icon)
-                tw.text = when (content) {
-                    "<enc:publickeys>" -> "Save public keys for user (EncryptDMs)"
-                    "<enc:aeskey>" -> "Save channel key from user (EncryptDMs)"
-                    else -> "This should never happen wtf"
-                }
-                tw.setCompoundDrawablesRelativeWithIntrinsicBounds(ContextCompat.getDrawable(view.context, R.e.avd_show_password), null, null, null)
-                tw.layoutParams = view.layoutParams
-                tw.id = View.generateViewId()
-                tw.setOnClickListener {
-                    when (content) {
-                        "<enc:publickeys>" -> Utils.threadPool.execute {
-                            val key = message.getAttachmentText("publickey.txt") ?: return@execute
-                            settings.setPubKey(userId, key)
-                            val signingKey = message.getAttachmentText("publicsigningkey.txt") ?: return@execute
-                            settings.setPubSigningKey(userId, signingKey)
-                            Utils.showToast("Public keys saved for user.")
-                            this.dismiss()
+            val message = (it.args[0] as WidgetChatListActions.Model).message
+            val userId = CoreUser(message.author).id
+            val content = message.content
+            if (
+                    !listOf(
+                            "<enc:publickeys>",
+                            "<enc:aeskey>"
+                    ).contains(content)
+            ) return@after // If message is not relevant ignore it
+            val nestedScrollView = this.requireView() as NestedScrollView
+            val layout = nestedScrollView.getChildAt(0) as LinearLayout
+            val binding = WidgetChatListActions::class.java.getDeclaredMethod("getBinding")
+                    .apply { isAccessible = true }
+                    .invoke(this) as WidgetChatListActionsBinding
+            val view = binding.j
+            val param = view.layoutParams
+            val params = LinearLayout.LayoutParams(param.width, param.height)
+            params.leftMargin = DimenUtils.dpToPx(20)
+            val tw = TextView(view.context, null, 0, R.i.UiKit_Settings_Item_Icon)
+            tw.text = when (content) {
+                "<enc:publickeys>" -> "Save public keys for user (EncryptDMs)"
+                "<enc:aeskey>" -> "Save channel key from user (EncryptDMs)"
+                else -> "This should never happen wtf"
+            }
+            tw.setCompoundDrawablesRelativeWithIntrinsicBounds(ContextCompat.getDrawable(view.context, R.e.avd_show_password), null, null, null)
+            tw.layoutParams = view.layoutParams
+            tw.id = View.generateViewId()
+            tw.setOnClickListener {
+                when (content) {
+                    "<enc:publickeys>" -> Utils.threadPool.execute {
+                        val key = message.getAttachmentText("publickey.txt") ?: return@execute
+                        settings.setPubKey(userId, key)
+                        val signingKey = message.getAttachmentText("publicsigningkey.txt") ?: return@execute
+                        settings.setPubSigningKey(userId, signingKey)
+                        Utils.showToast("Public keys saved for user.")
+                        this.dismiss()
+                    }
+                    "<enc:aeskey>" -> Utils.threadPool.execute {
+                        // Encrypted text
+                        val encryptedText = message.getAttachmentText("aeskey.txt") ?: return@execute
+                        // Signature verification
+                        val signature = message.getAttachmentText("signature.txt") ?: return@execute
+                        val publicSigningKey = settings.getPubSigningKey(userId)
+                                ?: return@execute Utils.showToast("Public signing key for user was not found, make sure you have saved their public keys first!", true)
+                        val verified = try {
+                            publicSigningKey.asPublicKey().verify(encryptedText, signature)
+                        } catch (e: Exception) {
+                            logger.error("Verification error:", e)
+                            Utils.showToast("Error occurred while verifying signature, message could be modified, not saving key", true)
+                            return@execute
                         }
-                        "<enc:aeskey>" -> Utils.threadPool.execute {
-                            // Encrypted text
-                            val encryptedText = message.getAttachmentText("aeskey.txt") ?: return@execute
-                            // Signature verification
-                            val signature = message.getAttachmentText("signature.txt") ?: return@execute
-                            val publicSigningKey = settings.getPubSigningKey(userId)
-                                    ?: return@execute Utils.showToast("Public signing key for user was not found, make sure you have saved their public keys first!", true)
-                            val verified = try {
-                                publicSigningKey.asPublicKey().verify(encryptedText, signature)
-                            } catch (e: Exception) {
-                                logger.error("Verification error:", e)
-                                Utils.showToast("Error occurred while verifying signature, message could be modified, not saving key", true)
-                                return@execute
-                            }
-                            if (!verified) {
-                                Utils.showToast("Signature verification failed, message could be modified, not saving key", true)
-                                return@execute
-                            }
-                            val key = settings.privateKey.asPrivateKey()
-                            settings.setKey(message.channelId, key.decrypt(encryptedText))
-                            Utils.showToast("Key decrypted and saved for this channel.")
-                            this.dismiss()
+                        if (!verified) {
+                            Utils.showToast("Signature verification failed, message could be modified, not saving key", true)
+                            return@execute
                         }
+                        val key = settings.privateKey.asPrivateKey()
+                        settings.setKey(message.channelId, key.decrypt(encryptedText))
+                        Utils.showToast("Key decrypted and saved for this channel.")
+                        this.dismiss()
                     }
                 }
-                layout.addView(tw)
-            } catch (e: Exception) {
-                logger.error(e) // Patcher extension error catching errors itself lmaoS
             }
+            layout.addView(tw)
         }
     }
 
     override fun stop(context: Context) {
         patcher.unpatchAll()
+        commands.unregisterAll()
     }
 }
