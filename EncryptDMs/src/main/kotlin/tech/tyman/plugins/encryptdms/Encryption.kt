@@ -9,6 +9,10 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
+import android.R.attr.data
+
+
+
 
 fun genAesKey(): SecretKey {
     val keyGenerator = KeyGenerator.getInstance("AES")
@@ -49,4 +53,19 @@ fun PrivateKey.decrypt(text: String): String {
     val cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING")
     cipher.init(Cipher.PRIVATE_KEY, this)
     return cipher.doFinal(Base64.decode(text, Base64.DEFAULT)).asHex()
+}
+
+fun PrivateKey.sign(text: String): String {
+    val signature = Signature.getInstance("SHA512WithRSA")
+    signature.initSign(this)
+    signature.update(text.toByteArray())
+    return Base64.encodeToString(signature.sign(), Base64.DEFAULT)
+}
+
+fun PublicKey.verify(text: String, signature: String): Boolean {
+    val signatureInstance = Signature.getInstance("SHA512WithRSA")
+    signatureInstance.initVerify(this)
+    signatureInstance.update(text.toByteArray())
+
+    return signatureInstance.verify(Base64.decode(signature, Base64.DEFAULT))
 }
