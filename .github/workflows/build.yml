@@ -16,6 +16,7 @@ jobs:
         uses: actions/checkout@master
         with:
           path: "src"
+          fetch-depth: 2
 
       - name: Checkout builds
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
