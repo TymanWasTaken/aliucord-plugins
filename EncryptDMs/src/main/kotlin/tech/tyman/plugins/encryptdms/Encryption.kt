@@ -3,16 +3,12 @@ package tech.tyman.plugins.encryptdms
 import android.util.Base64
 import java.security.*
 import java.security.spec.PKCS8EncodedKeySpec
-import java.security.spec.RSAPublicKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
+import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import android.R.attr.data
-
-
-
 
 fun genAesKey(): SecretKey {
     val keyGenerator = KeyGenerator.getInstance("AES")
@@ -24,10 +20,11 @@ fun Key.asHex() = this.encoded.asHex()
 fun ByteArray.asHex() = this.joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
 fun Key.asBase64() = Base64.encodeToString(this.encoded, Base64.DEFAULT)
 
+fun String.asByteArray() = this.chunked(2)
+        .map { it.toInt(16).toByte() }
+        .toByteArray()
 fun String.asKey(): SecretKey {
-    val encodedKey = this.chunked(2)
-            .map { it.toInt(16).toByte() }
-            .toByteArray()
+    val encodedKey = this.asByteArray()
     return SecretKeySpec(encodedKey, 0, encodedKey.size, "AES")
 }
 
@@ -68,4 +65,34 @@ fun PublicKey.verify(text: String, signature: String): Boolean {
     signatureInstance.update(text.toByteArray())
 
     return signatureInstance.verify(Base64.decode(signature, Base64.DEFAULT))
+}
+
+fun SecretKey.encrypt(text: String): Pair<ByteArray, String> {
+    // Get cipher
+    val cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
+    // Get key
+    val keySpec = SecretKeySpec(this.encoded, "AES")
+    // Generate initialization vector
+    val iv = ByteArray(16)
+    SecureRandom().nextBytes(iv)
+    val ivSpec = IvParameterSpec(iv)
+    // Encrypt
+    cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec)
+    return Pair(iv, Base64.encodeToString(cipher.doFinal(text.toByteArray()), Base64.DEFAULT))
+}
+
+fun SecretKey.decrypt(encryptedText: String, iv: ByteArray): String {
+    // Get cipher
+    val cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
+    // Get key
+    val keySpec = SecretKeySpec(this.encoded, "AES")
+    // Set initialization vector
+    val ivSpec = IvParameterSpec(iv)
+    // Decrypt
+    cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec)
+    return String(
+            cipher.doFinal(
+                    Base64.decode(encryptedText, Base64.DEFAULT)
+            )
+    )
 }

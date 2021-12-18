@@ -17,13 +17,23 @@ import com.aliucord.Utils
 import com.aliucord.api.CommandsAPI
 import com.aliucord.api.PatcherAPI
 import com.aliucord.api.SettingsAPI
+import com.aliucord.patcher.before
 import com.aliucord.settings.delegate
 import com.aliucord.utils.DimenUtils
+import com.aliucord.wrappers.ChannelWrapper.Companion.recipients
 import com.discord.api.commands.ApplicationCommandType
+import com.discord.api.message.LocalAttachment
 import com.discord.databinding.WidgetChatListActionsBinding
 import com.discord.models.user.CoreUser
 import com.discord.stores.StoreStream
+import com.discord.utilities.SnowflakeUtils
+import com.discord.utilities.attachments.AttachmentUtilsKt
+import com.discord.widgets.chat.MessageContent
+import com.discord.widgets.chat.MessageManager
+import com.discord.widgets.chat.input.ChatInputViewModel
 import com.discord.widgets.chat.list.actions.WidgetChatListActions
+import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemAttachment
+import com.lytefast.flexinput.model.Attachment
 import java.io.File
 
 @AliucordPlugin
@@ -61,6 +71,20 @@ class EncryptDMs : Plugin() {
         this.pubSigningKeys = keys
     }
 
+    // Generic settings
+    private var SettingsAPI.enabledChannels: ArrayList<Long> by settings.delegate(arrayListOf())
+
+    private fun SettingsAPI.enableChannel(channel: Long) {
+        val channels = this.enabledChannels
+        channels.add(channel)
+        this.enabledChannels = channels
+    }
+    private fun SettingsAPI.disableChannel(channel: Long) {
+        val channels = this.enabledChannels
+        channels.remove(channel)
+        this.enabledChannels = channels
+    }
+
     private val curChannel: Long
         get() = StoreStream.getChannelsSelected().id
 
@@ -68,6 +92,8 @@ class EncryptDMs : Plugin() {
         // Patch context menus
         patcher.patchDirectMessageChannelActions()
         patcher.patchMessageActions()
+        // Patch sent messages
+        patcher.patchSentMessages()
 
         // Add commands
         commands.registerCommand(
@@ -171,7 +197,12 @@ class EncryptDMs : Plugin() {
     private fun PatcherAPI.patchDirectMessageChannelActions() {
         this.after<WidgetChannelsListItemChannelActions>("configureUI", WidgetChannelsListItemChannelActions.Model::class.java) {
             val channelId = (it.args[0] as WidgetChannelsListItemChannelActions.Model).channel.id
-            if (settings.getKey(channelId) != null) return@after // If key already generated then ignore the rest of this
+
+            val state =
+                    if (settings.getKey(channelId) == null) ChannelState.NO_KEY
+                    else if (settings.enabledChannels.contains(channelId)) ChannelState.ENABLED
+                    else ChannelState.DISABLED
+
             val nestedScrollView = this.requireView() as NestedScrollView
             val layout = nestedScrollView.getChildAt(0) as LinearLayout
             val binding = com.discord.widgets.channels.list.WidgetChannelsListItemChannelActions::class.java.getDeclaredMethod("getBinding")
@@ -182,15 +213,33 @@ class EncryptDMs : Plugin() {
             val params = LinearLayout.LayoutParams(param.width, param.height)
             params.leftMargin = DimenUtils.dpToPx(20)
             val tw = TextView(view.context, null, 0, R.i.UiKit_Settings_Item_Icon)
-            tw.text = "Setup encrypted DMs (EncryptDMs)"
+            tw.text = when (state) {
+                ChannelState.NO_KEY -> "Setup encrypted DMs (EncryptDMs)"
+                ChannelState.DISABLED -> "Enable encrypted DMs (EncryptDMs)"
+                ChannelState.ENABLED -> "Disable encrypted DMs (EncryptDMs)"
+            }
             tw.setCompoundDrawablesRelativeWithIntrinsicBounds(ContextCompat.getDrawable(view.context, R.e.avd_show_password), null, null, null)
             tw.layoutParams = view.layoutParams
             tw.id = View.generateViewId()
             tw.setOnClickListener {
-                val key = genAesKey().asHex()
-                settings.setKey(channelId, key)
-                Utils.showToast("Key saved for channel. To send this key to the other user, tell the other user to run the /sendpubkey command, press and hold their message, and then run the /sendkey command.", true)
-                this.dismiss()
+                when (state) {
+                    ChannelState.NO_KEY -> {
+                        val key = genAesKey().asHex()
+                        settings.setKey(channelId, key)
+                        Utils.showToast("Key saved for channel. To send this key to the other user, tell the other user to run the /sendpubkey command, press and hold their message, and then run the /sendkey command.", true)
+                        this.dismiss()
+                    }
+                    ChannelState.DISABLED -> {
+                        settings.enableChannel(channelId)
+                        Utils.showToast("Enabled encrypted DMs for this channel! Sent messages will now be encrypted.")
+                        this.dismiss()
+                    }
+                    ChannelState.ENABLED -> {
+                        settings.disableChannel(channelId)
+                        Utils.showToast("Disabled encrypted DMs for this channel. Sent messages will no longer be encrypted.")
+                        this.dismiss()
+                    }
+                }
             }
             layout.addView(tw)
         }
@@ -264,8 +313,116 @@ class EncryptDMs : Plugin() {
         }
     }
 
+    private val textContentField =
+            MessageContent::class.java.getDeclaredField("textContent").apply {
+                isAccessible = true
+            }
+
+    private fun MessageContent.set(text: String) = textContentField.set(this, text)
+
+    private fun PatcherAPI.patchSentMessages() {
+        this.before<ChatInputViewModel>(
+                "sendMessage",
+                Context::class.java,
+                MessageManager::class.java,
+                MessageContent::class.java,
+                List::class.java,
+                Boolean::class.javaPrimitiveType!!,
+                Function1::class.java
+        ) {
+            if (!settings.enabledChannels.contains(curChannel)) return@before
+            val recipients = StoreStream.getChannelsSelected().selectedChannel.recipients
+                    ?: return@before // This is not useless fuck you android studio
+            if (recipients.size != 1) return@before
+            val content = it.args[2] as MessageContent
+            val context = it.args[0] as Context
+            @Suppress("UNCHECKED_CAST")
+            val attachments = (it.args[3] as List<Attachment<*>>).toMutableList()
+            val plainText = content.textContent
+
+            // Encrypt with AES
+            val key = settings.getKey(curChannel)
+                    ?: run {
+                        Utils.showToast("There is no key saved for this DM! Make sure to properly set it up with the other user first!", true)
+                        it.result = null
+                        return@before
+                    }
+            val encryptedText = key.asKey().encrypt(plainText)
+            with (File.createTempFile("encryptdms", null, context.cacheDir)) {
+                this.writeText(encryptedText.second)
+                attachments.add(
+                        AttachmentUtilsKt.toAttachment(
+                                LocalAttachment(
+                                        SnowflakeUtils.fromTimestamp(System.currentTimeMillis()),
+                                        this.toURI().toASCIIString(),
+                                        "message.txt"
+                                )
+                        )
+                )
+            }
+            // Add initialization vector because encryption
+            with (File.createTempFile("encryptdms", null, context.cacheDir)) {
+                this.writeText(encryptedText.first.asHex())
+                attachments.add(
+                        AttachmentUtilsKt.toAttachment(
+                                LocalAttachment(
+                                        SnowflakeUtils.fromTimestamp(System.currentTimeMillis()),
+                                        this.toURI().toASCIIString(),
+                                        "iv.txt"
+                                )
+                        )
+                )
+            }
+            // Sign with RSA
+            var privateSigningKey = settings.privateSigningKey
+            if (privateSigningKey == "" || settings.publicSigningKey == "") {
+                genRsaKeys().run {
+                    settings.publicSigningKey = public.asBase64()
+                    settings.privateSigningKey = private.asBase64()
+                    privateSigningKey = private.asBase64()
+                }
+            }
+            with (File.createTempFile("encryptdms", null, context.cacheDir)) {
+                this.writeText(privateSigningKey.asPrivateKey().sign(encryptedText.second))
+                attachments.add(
+                        AttachmentUtilsKt.toAttachment(
+                                LocalAttachment(
+                                        SnowflakeUtils.fromTimestamp(System.currentTimeMillis()),
+                                        this.toURI().toASCIIString(),
+                                        "signature.txt"
+                                )
+                        )
+                )
+            }
+            // Set attachments and content
+            it.args[3] = attachments
+            content.set("<enc:encryptedmessage>")
+            it.args[2] = content
+        }
+    }
+
+    private fun PatcherAPI.patchIncomingMessages() {
+        // Hide attachments if message is encrypted
+        patcher.before<WidgetChatListAdapterItemAttachment>(
+                "configureUI",
+                WidgetChatListAdapterItemAttachment.Model::class.java
+        ) {
+            val model = it.args[0] as WidgetChatListAdapterItemAttachment.Model
+            if (model.attachmentEntry.message.content != "<enc:encryptedtext>") return@before
+            it.result = null
+        }
+        // Patch message content to show decrypted text
+        // TODO
+    }
+
     override fun stop(context: Context) {
         patcher.unpatchAll()
         commands.unregisterAll()
     }
+}
+
+enum class ChannelState {
+    NO_KEY,
+    DISABLED,
+    ENABLED
 }
