@@ -23,6 +23,8 @@ import com.aliucord.utils.DimenUtils
 import com.aliucord.wrappers.ChannelWrapper.Companion.recipients
 import com.discord.api.commands.ApplicationCommandType
 import com.discord.api.message.LocalAttachment
+import com.discord.api.message.Message
+import com.discord.api.message.attachment.MessageAttachment
 import com.discord.databinding.WidgetChatListActionsBinding
 import com.discord.models.user.CoreUser
 import com.discord.stores.StoreStream
@@ -32,7 +34,7 @@ import com.discord.widgets.chat.MessageContent
 import com.discord.widgets.chat.MessageManager
 import com.discord.widgets.chat.input.ChatInputViewModel
 import com.discord.widgets.chat.list.actions.WidgetChatListActions
-import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemAttachment
+import com.discord.models.message.Message as ModelMessage
 import com.lytefast.flexinput.model.Attachment
 import java.io.File
 
@@ -43,8 +45,9 @@ class EncryptDMs : Plugin() {
 
     private fun SettingsAPI.getKey(channel: Long) = this.aesKeys[channel.toString()]
     private fun SettingsAPI.setKey(channel: Long, key: String) {
-        this.aesKeys[channel.toString()] = key
-        this.aesKeys = this.aesKeys
+        val keys = aesKeys.clone() as HashMap<String, String>
+        keys[channel.toString()] = key
+        this.aesKeys = keys
     }
 
     // RSA keys (encryption)
@@ -54,7 +57,7 @@ class EncryptDMs : Plugin() {
 
     private fun SettingsAPI.getPubKey(user: Long) = this.pubKeys[user.toString()]
     private fun SettingsAPI.setPubKey(user: Long, key: String) {
-        val keys = this.pubKeys
+        val keys = this.pubKeys.clone() as HashMap<String, String>
         keys[user.toString()] = key
         this.pubKeys = keys
     }
@@ -66,7 +69,7 @@ class EncryptDMs : Plugin() {
 
     private fun SettingsAPI.getPubSigningKey(user: Long) = this.pubSigningKeys[user.toString()]
     private fun SettingsAPI.setPubSigningKey(user: Long, key: String) {
-        val keys = this.pubSigningKeys
+        val keys = this.pubSigningKeys.clone() as HashMap<String, String>
         keys[user.toString()] = key
         this.pubSigningKeys = keys
     }
@@ -75,12 +78,12 @@ class EncryptDMs : Plugin() {
     private var SettingsAPI.enabledChannels: ArrayList<Long> by settings.delegate(arrayListOf())
 
     private fun SettingsAPI.enableChannel(channel: Long) {
-        val channels = this.enabledChannels
+        val channels = this.enabledChannels.clone() as ArrayList<Long>
         channels.add(channel)
         this.enabledChannels = channels
     }
     private fun SettingsAPI.disableChannel(channel: Long) {
-        val channels = this.enabledChannels
+        val channels = this.enabledChannels.clone() as ArrayList<Long>
         channels.remove(channel)
         this.enabledChannels = channels
     }
@@ -94,6 +97,8 @@ class EncryptDMs : Plugin() {
         patcher.patchMessageActions()
         // Patch sent messages
         patcher.patchSentMessages()
+        // Patch incoming messages
+        patcher.patchIncomingMessages()
 
         // Add commands
         commands.registerCommand(
@@ -401,18 +406,53 @@ class EncryptDMs : Plugin() {
         }
     }
 
+    private val contentField = Message::class.java.getDeclaredField("content").apply { isAccessible = true }
+    private val attachmentsField = Message::class.java.getDeclaredField("attachments").apply { isAccessible = true }
+
     private fun PatcherAPI.patchIncomingMessages() {
         // Hide attachments if message is encrypted
-        patcher.before<WidgetChatListAdapterItemAttachment>(
-                "configureUI",
-                WidgetChatListAdapterItemAttachment.Model::class.java
+        patcher.before<StoreStream>(
+                "handleMessageCreate",
+                Message::class.java
         ) {
-            val model = it.args[0] as WidgetChatListAdapterItemAttachment.Model
-            if (model.attachmentEntry.message.content != "<enc:encryptedtext>") return@before
+            val apiMessage = it.args[0] as Message
+            val message = ModelMessage(apiMessage)
+            if (message.content != "<enc:encryptedmessage>") return@before
+            Utils.threadPool.execute {
+                val response = run {
+                    // Encrypted text
+                    val encryptedText = message.getAttachmentTextWithError("message.txt")
+                    if (!encryptedText.first) return@run encryptedText.second
+                    // Signature verification
+                    val signature = message.getAttachmentTextWithError("signature.txt")
+                    if (!signature.first) return@run signature.second
+                    val publicSigningKey = settings.getPubSigningKey(CoreUser(message.author).id)
+                            ?: return@run "Public signing key for user was not found, make sure you have saved their public keys first!"
+                    val verified = try {
+                        publicSigningKey.asPublicKey().verify(encryptedText.second, signature.second)
+                    } catch (e: Exception) {
+                        logger.error("Verification error:", e)
+                        return@run "Error occurred while verifying signature, message could be modified"
+                    }
+                    if (!verified) {
+                        return@run "Signature verification failed, message could be modified, not saving key"
+                    }
+                    // Initialization vector
+                    val iv = message.getAttachmentTextWithError("iv.txt")
+                    if (!iv.first) return@run iv.second
+                    // Decrypt
+                    val key = settings.getKey(message.channelId)
+                            ?: return@run "Key for channel not found, make sure it has been sent by the other user and saved by you!"
+                    return@run key.asKey().decrypt(encryptedText.second, iv.second.asByteArray())
+                }
+                contentField[apiMessage] = response
+                @Suppress("UNCHECKED_CAST")
+                val attachments = attachmentsField[apiMessage] as MutableList<MessageAttachment>
+                attachments.clear()
+                StoreStream.`access$handleMessageCreate`(this, apiMessage)
+            }
             it.result = null
         }
-        // Patch message content to show decrypted text
-        // TODO
     }
 
     override fun stop(context: Context) {

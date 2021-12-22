@@ -7,8 +7,8 @@ buildscript {
         maven("https://jitpack.io")
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.0.1")
-        classpath("com.github.Aliucord:gradle:${project.properties["aliucord.gradleVersion"]}")
+        classpath("com.android.tools.build:gradle:7.0.4")
+        classpath("com.github.Aliucord:gradle:57d0d30aa1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
     }
 }
@@ -17,6 +17,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven("https://maven.aliucord.com/snapshots")
         maven("https://jitpack.io")
     }
 }
@@ -35,7 +36,7 @@ subprojects {
         author("Tyman", 487443883127472129L)
         updateUrl.set("https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json")
         buildUrl.set("https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/%s.zip")
-        minimumDiscordVersion.set((project.properties["aliucord.minimumDiscordVersion"] as String).toInt())
+        minimumDiscordVersion.set(101203)
     }
 
     android {
@@ -66,8 +67,8 @@ subprojects {
         val discord by configurations
         val implementation by configurations
 
-        discord("com.discord:discord:${project.properties["aliucord.discordVersion"]}")
-        implementation("com.github.Aliucord:Aliucord:${project.properties["aliucord.aliucordVersion"]}")
+        discord("com.discord:discord:101203")
+        implementation("com.aliucord:Aliucord:main-SNAPSHOT")
 
         implementation("androidx.appcompat:appcompat:1.3.1")
         implementation("com.google.android.material:material:1.4.0")

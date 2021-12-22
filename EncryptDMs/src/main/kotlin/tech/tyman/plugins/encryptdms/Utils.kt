@@ -22,3 +22,16 @@ fun Message.getAttachmentText(name: String): String? {
         return null
     }
 }
+
+fun Message.getAttachmentTextWithError(name: String): Pair<Boolean, String> {
+    val url = this.attachments.find { attachment -> attachment.filename == name }?.url
+            ?: run {
+                return Pair(false, "Unable to find $name attachment for some reason")
+            }
+    return try {
+        Pair(true, Http.simpleGet(url))
+    } catch (e: IOException) {
+        Logger("EncryptDMs").error(e)
+        return Pair(false, "Unable to load $name attachment for some reason")
+    }
+}
