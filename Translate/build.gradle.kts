@@ -1,6 +1,8 @@
-version = "1.2.4"
+version = "1.3.0"
 description = "Adds an option to translate messages."
 aliucord.changelog.set("""
+    # Version 1.3.0
+    * Added "show original functionality", will show the original, untranslated message, but still keeps it cached so you can instantly re-translate it.
     # Version 1.2.4
     * Fixed translate settings crash
     # Version 1.2.3

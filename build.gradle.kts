@@ -36,7 +36,7 @@ subprojects {
         author("Tyman", 487443883127472129L)
         updateUrl.set("https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/updater.json")
         buildUrl.set("https://raw.githubusercontent.com/TymanWasTaken/aliucord-plugins/builds/%s.zip")
-        minimumDiscordVersion.set(101203)
+        minimumDiscordVersion.set(126019)
     }
 
     android {
@@ -67,7 +67,7 @@ subprojects {
         val discord by configurations
         val implementation by configurations
 
-        discord("com.discord:discord:101203")
+        discord("com.discord:discord:126019")
         implementation("com.aliucord:Aliucord:main-SNAPSHOT")
 
         implementation("androidx.appcompat:appcompat:1.3.1")

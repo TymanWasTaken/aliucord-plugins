@@ -109,6 +109,7 @@ class Translate : Plugin() {
             val message = messageEntry.message ?: return@Hook
             val id = message.id
             val translateData = translatedMessages[id] ?: return@Hook
+            if (translateData.showingOriginal) return@Hook
             if (translateData.sourceText != message.content) {
                 translatedMessages.remove(id)
                 return@Hook
@@ -133,24 +134,27 @@ class Translate : Plugin() {
             val translateButton = binding.a.findViewById<TextView>(viewId)
             translateButton.setOnClickListener { _ ->
                 val message = (it.args[0] as WidgetChatListActions.Model).message
-                Utils.threadPool.execute {
-                    val response = translateMessage(message.content)
-                    if (response !is TranslateSuccessData) {
-                        with (response as TranslateErrorData) {
-                            Utils.showToast("$errorText ($errorCode)", true)
-                            return@execute
+                val translationEntry = translatedMessages[message.id]
+
+                if (translationEntry == null) {
+                    // If not translated yet, fetch and cache the translation, then rerender the message
+                    Utils.threadPool.execute {
+                        val response = translateMessage(message.content)
+                        if (response !is TranslateSuccessData) {
+                            with (response as TranslateErrorData) {
+                                Utils.showToast("$errorText ($errorCode)", true)
+                                return@execute
+                            }
                         }
+                        translatedMessages[message.id] = response
+                        chatList?.rerenderMessage(message.id)
+                        Utils.showToast("Translated message")
+                        menu.dismiss()
                     }
-                    translatedMessages[message.id] = response
-                    if (chatList != null) {
-                        val adapter = WidgetChatList.`access$getAdapter$p`(chatList)
-                        val data = adapter.internalData
-                        val i = CollectionUtils.findIndex(data) { m ->
-                            m is MessageEntry && m.message.id == message.id
-                        }
-                        if (i != -1) adapter.notifyItemChanged(i)
-                    }
-                    Utils.showToast("Translated message")
+                } else {
+                    // If translated, then no need to translate anything, so just flip the showingOriginal property and rerender
+                    translationEntry.showingOriginal = !translationEntry.showingOriginal
+                    chatList?.rerenderMessage(message.id)
                     menu.dismiss()
                 }
             }
@@ -159,9 +163,18 @@ class Translate : Plugin() {
         patcher.patch(messageContextMenu, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), Hook {
             val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
             val context = linearLayout.context
+            val messageId = WidgetChatListActions.`access$getMessageId$p`(it.thisObject as WidgetChatListActions)
             linearLayout.addView(TextView(context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
+                val translationEntry = translatedMessages[messageId]
+
                 id = viewId
-                text = "Translate message"
+                text = if (translationEntry == null || translationEntry.showingOriginal) {
+                    // If not translated yet, or original is currently shown
+                    "Translate message"
+                } else {
+                    // Otherwise, it must be translated and original is not currently being shown
+                    "Show original"
+                }
                 setCompoundDrawablesRelativeWithIntrinsicBounds(pluginIcon, null, null, null)
             })
         })
