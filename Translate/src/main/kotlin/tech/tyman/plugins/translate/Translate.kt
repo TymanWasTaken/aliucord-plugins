@@ -19,6 +19,7 @@ import com.aliucord.entities.Plugin
 import com.aliucord.patcher.Hook
 import com.discord.api.commands.ApplicationCommandType
 import com.discord.databinding.WidgetChatListActionsBinding
+import com.discord.utilities.color.ColorCompat
 import com.discord.utilities.textprocessing.node.EditedMessageNode
 import com.discord.utilities.view.text.SimpleDraweeSpanTextView
 import com.discord.widgets.chat.list.WidgetChatList
@@ -43,7 +44,7 @@ class Translate : Plugin() {
     }
 
     override fun load(ctx: Context) {
-        pluginIcon = ContextCompat.getDrawable(ctx, R.e.ic_locale_24dp)!!
+        pluginIcon = ContextCompat.getDrawable(ctx, R.e.ic_locale_24dp)!!.mutate()
     }
 
     override fun start(context: Context) {
@@ -164,6 +165,7 @@ class Translate : Plugin() {
             val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
             val context = linearLayout.context
             val messageId = WidgetChatListActions.`access$getMessageId$p`(it.thisObject as WidgetChatListActions)
+            pluginIcon.setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
             linearLayout.addView(TextView(context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
                 val translationEntry = translatedMessages[messageId]
 
