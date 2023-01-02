@@ -211,11 +211,19 @@ class Translate : Plugin() {
         }
         val parsedJson = JSONArray(translatedJsonReq.text())
 
+        val translatedSections = parsedJson.getJSONArray(0)
+
+        val translatedText = buildString {
+            for (i in 0 until translatedSections.length()) {
+                append(translatedSections.getJSONArray(i).getString(0))
+            }
+        }
+
         return TranslateSuccessData(
                 sourceLanguage = parsedJson.getString(2),
                 translatedLanguage = toLang,
                 sourceText = text,
-                translatedText = parsedJson.getJSONArray(0).getJSONArray(0).getString(0)
+                translatedText = translatedText
         )
     }
 
