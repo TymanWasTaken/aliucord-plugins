@@ -4,7 +4,9 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+
         maven("https://maven.aliucord.com/snapshots")
+        maven("https://jitpack.io")
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.0.4")
