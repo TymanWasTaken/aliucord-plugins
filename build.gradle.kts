@@ -18,7 +18,7 @@ allprojects {
         google()
         mavenCentral()
         maven("https://maven.aliucord.com/snapshots")
-
+        maven("https://jitpack.io")
     }
 }
 
