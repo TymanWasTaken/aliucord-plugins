@@ -4,11 +4,11 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
+        maven("https://maven.aliucord.com/snapshots")
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.0.4")
-        classpath("com.github.Aliucord:gradle:cb33305")
+        classpath("com.aliucord:gradle:cb33305")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
     }
 }
@@ -18,7 +18,7 @@ allprojects {
         google()
         mavenCentral()
         maven("https://maven.aliucord.com/snapshots")
-        maven("https://jitpack.io")
+
     }
 }
 
