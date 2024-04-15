@@ -2,6 +2,7 @@
 
 package xyz.myriation.plugins.rolecolorcontrast
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.Drawable
@@ -9,11 +10,13 @@ import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import com.aliucord.PluginManager
+import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
 import com.aliucord.patcher.after
 import com.discord.models.member.GuildMember
 import com.discord.stores.StoreStream
+import com.discord.widgets.channels.memberlist.adapter.ChannelMembersListAdapter
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage
 import com.lytefast.flexinput.R
 import kotlin.math.pow
@@ -32,7 +35,7 @@ class RoleColorContrast : Plugin() {
 
     @get:ColorInt
     val themerBackgroundColor by lazy {
-        val classLoader = PluginManager.plugins["Themer"]!!::class.java.classLoader!!
+        val classLoader = (PluginManager.plugins["Themer"] ?: return@lazy null)::class.java.classLoader!!
         val resourceManager =
             classLoader.loadClass("dev.vendicated.aliucordplugs.themer.ResourceManager").getDeclaredField("INSTANCE")
                 .get(null)
@@ -44,35 +47,15 @@ class RoleColorContrast : Plugin() {
         pluginIcon = ContextCompat.getDrawable(context, R.e.ic_accessibility_24dp)!!
     }
 
+    @SuppressLint("SetTextI18n")
     override fun start(context: Context) {
+        // Patch names in chat
         patcher.after<WidgetChatListAdapterItemMessage>("getAuthorTextColor", GuildMember::class.java) {
-            val theme = StoreStream.getUserSettingsSystem().theme
-            val bg = when (theme) {
-                "pureEvil" -> ContextCompat.getColor(context, R.c.black)
-                "dark" -> themerBackgroundColor ?: ContextCompat.getColor(context, R.c.primary_dark_600)
-                "light" -> ContextCompat.getColor(context, R.c.white)
-                else -> return@after
-            }
-
-            val hsl = FloatArray(3)
-            ColorUtils.colorToHSL(it.result as Int, hsl)
-            val factor = if (calculateRelativeLuminance(bg) < 0.5) {
-                0.01f
-            } else {
-                -0.01f
-            }
-            while (calculateContrast(
-                    ColorUtils.setAlphaComponent(ColorUtils.HSLToColor(hsl), 255), bg
-                ) < if (settings.getBool("useAAA", false)) ContrastLevel.AAA else ContrastLevel.AA
-            ) {
-                // If we can't create contrast, settle for the best we can
-                if (hsl[2] > 1 || hsl[2] < 0) {
-                    hsl[2] = hsl[2].coerceIn(0f..1f)
-                    break
-                }
-                hsl[2] += factor
-            }
-            it.result = ColorUtils.setAlphaComponent(ColorUtils.HSLToColor(hsl), 255)
+            it.result = coerceToContrast(it.result as Int, getBackgroundColor() ?: return@after)
+        }
+        // Patch names in guild member list
+        patcher.after<ChannelMembersListAdapter.Item.Member>("getColor") {
+            it.result = coerceToContrast(it.result as Int, getBackgroundColor() ?: return@after)
         }
     }
 
@@ -80,7 +63,36 @@ class RoleColorContrast : Plugin() {
         patcher.unpatchAll()
     }
 
-    fun calculateContrast(text: Int, background: Int): ContrastLevel {
+    private fun getBackgroundColor(): Int? {
+        val theme = StoreStream.getUserSettingsSystem().theme
+        return when (theme) {
+            "pureEvil" -> ContextCompat.getColor(Utils.appContext, R.c.black)
+            "dark" -> themerBackgroundColor ?: ContextCompat.getColor(Utils.appContext, R.c.primary_dark_600)
+            "light" -> ContextCompat.getColor(Utils.appContext, R.c.white)
+            else -> return null
+        }
+    }
+
+    private fun coerceToContrast(text: Int, background: Int): Int {
+        val hsl = FloatArray(3)
+        ColorUtils.colorToHSL(text, hsl)
+        val factor = if (calculateRelativeLuminance(background) < 0.5) 0.03f else -0.03f
+        val comparator = if (settings.getBool("useAAA", false)) ContrastLevel.AAA else ContrastLevel.AA
+        while (calculateContrast(
+                ColorUtils.setAlphaComponent(ColorUtils.HSLToColor(hsl), 255), background
+            ) < comparator
+        ) {
+            hsl[2] += factor
+            // If we can't create full contrast, settle for the best we can
+            if (hsl[2] > 1 || hsl[2] < 0) {
+                hsl[2] = hsl[2].coerceIn(0f..1f)
+                break
+            }
+        }
+        return ColorUtils.HSLToColor(hsl)
+    }
+
+    private fun calculateContrast(text: Int, background: Int): ContrastLevel {
         val textLuminance = calculateRelativeLuminance(text)
         val backgroundLuminance = calculateRelativeLuminance(background)
         val (luminanceOne, luminanceTwo) = if (textLuminance >= backgroundLuminance) {
