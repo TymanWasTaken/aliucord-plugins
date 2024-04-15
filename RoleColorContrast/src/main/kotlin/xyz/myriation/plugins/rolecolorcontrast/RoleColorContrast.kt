@@ -4,6 +4,7 @@ package xyz.myriation.plugins.rolecolorcontrast
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
@@ -23,6 +24,8 @@ enum class ContrastLevel {
 
 @AliucordPlugin
 class RoleColorContrast : Plugin() {
+    lateinit var pluginIcon: Drawable
+
     init {
         settingsTab = SettingsTab(PluginSettings::class.java).withArgs(settings)
     }
@@ -35,6 +38,10 @@ class RoleColorContrast : Plugin() {
                 .get(null)
         resourceManager::class.java.getDeclaredMethod("getColorForName", String::class.java)
             .invoke(resourceManager!!, "primary_dark_600") as Int?
+    }
+
+    override fun load(context: Context) {
+        pluginIcon = ContextCompat.getDrawable(context, R.e.ic_accessibility_24dp)!!
     }
 
     override fun start(context: Context) {
