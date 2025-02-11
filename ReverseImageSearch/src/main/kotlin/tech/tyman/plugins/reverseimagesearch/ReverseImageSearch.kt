@@ -62,7 +62,7 @@ class ReverseImageSearch : Plugin() {
 @Suppress("unused")
 enum class Engine(val urlTemplate: String?, val niceName: String) {
     ASK(null, "Ask every time"),
-    GOOGLE("https://www.google.com/searchbyimage?client=app&image_url=%s", "Google images"),
+    GOOGLE("https://lens.google.com/uploadbyurl?url=%s", "Google Lens"),
     TIN_EYE("https://www.tineye.com/search?url=%s", "TinEye"),
     YANDEX("https://yandex.com/images/search?url=%s&rpt=imageview", "Yandex"),
     BING("https://www.bing.com/images/search?q=imgurl:%s&view=detailv2&iss=sbi&FORM=IRSBIQ", "Bing"),
