@@ -2,7 +2,7 @@ version = "1.0.3"
 description = "A plugin that adds a button for reverse image searching a sent image."
 aliucord.changelog.set("""
     # Version 1.0.3
-    * Change google images to google lens (old google images no longer works)
+    * Replace google images search with google lens, as the old images URL no longer works (thanks Delphox)
     # Version 1.0.2
     * Fixed google images search (i love it when google)
     # Version 1.0.1
